@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func ConnectDB() {
+func ConnectDB() *pgx.Conn {
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
 	host := os.Getenv("DB_HOST")
@@ -27,7 +27,7 @@ func ConnectDB() {
 	if err != nil {
 		log.Fatalf("Не удалось подключиться: %v", err)
 	}
-	defer conn.Close(context.Background())
 
-	log.Println("Подключение к Supabase прошло успешно!")
+	log.Println("Подключение к базе прошло успешно!")
+	return conn
 }
