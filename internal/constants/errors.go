@@ -1,0 +1,5 @@
+package constants
+
+import "errors"
+
+var Appointments_IS_nil = errors.New("appointments is nil ")
