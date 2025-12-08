@@ -8,8 +8,8 @@ type Doctor struct {
 	Bio             string   `json:"bio,omitempty" gorm:"type:text"`
 	AvgRating       float64  `json:"avg_rating"`
 
-	Shedules []Shedule `json:"-"`
-	Reviews  []Review  `json:"-"`
+	Schedules []Shedule `json:"-"`
+	Reviews   []Review  `json:"-"`
 }
 
 type DoctorCreateRequest struct {
