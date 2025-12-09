@@ -38,7 +38,7 @@ func (r *gormReviewRepository) Create(review *models.Review) error {
 		return errors.New("review is nil")
 	}
 
-	return r.DB.Create(&review).Error
+	return r.DB.Create(review).Error
 }
 
 func (r *gormReviewRepository) GetByID(ctx context.Context, id uint) (*models.Review, error) {
@@ -59,10 +59,10 @@ func (r *gormReviewRepository) GetByDoctorID(ctx context.Context, doctorID uint)
 	return reviews, nil
 }
 
-func (r *gormReviewRepository) GetByPatientID(ctx context.Context, patien_id uint) ([]models.Review, error) {
+func (r *gormReviewRepository) GetByPatientID(ctx context.Context, patient_id uint) ([]models.Review, error) {
 	var reviews []models.Review
 
-	if err := r.DB.WithContext(ctx).Where("patient_id = ?", patien_id).Find(&reviews).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Where("patient_id = ?", patient_id).Find(&reviews).Error; err != nil {
 		return nil, err
 	}
 
