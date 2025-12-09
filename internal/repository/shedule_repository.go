@@ -68,20 +68,20 @@ func (r *gormSheduleRepository) GetByID(id uint, ctx context.Context) (*models.S
 func (r *gormSheduleRepository) GetByDateRange(ctx context.Context, doctorID uint, start, end time.Time) (*models.Shedule, error) {
 	var schedule models.Shedule
 
-	if err := r.DB.WithContext(ctx).Where("doctor_id = ? AND start_time <= ? AND end_time >= ?", doctorID, start, end).First(&schedule).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Where("doctor_id = ? AND date >= ? AND date <= ?", doctorID, start, end).First(&schedule).Error; err != nil {
 		return nil, err
 	}
 
 	return &schedule, nil
 }
 
-func (r *gormSheduleRepository) CheckConflict(ctx context.Context, doctorID uint, startTime, endTime time.Time) (bool, error) {
+func (r *gormSheduleRepository) CheckConflict(ctx context.Context, doctorID uint, start, end time.Time) (bool, error) {
 	var count int64
 
 	err := r.DB.WithContext(ctx).Model(&models.Shedule{}).
-		Where("doctor_id = ? AND start_time < ? AND end_time > ?", doctorID, endTime, startTime).
+		Where("doctor_id = ? AND ((start_time < ? AND end_time > ?) OR (start_time < ? AND end_time > ?) OR (start_time >= ? AND end_time <= ?))",
+			doctorID, end, end, start, start, start, end).
 		Count(&count).Error
-
 	if err != nil {
 		return false, err
 	}
@@ -106,17 +106,11 @@ func (r *gormSheduleRepository) DeleteByDoctorID(ctx context.Context, doctorID u
 }
 
 func (r *gormSheduleRepository) GetAvailableSlots(ctx context.Context, doctorID uint) ([]models.Shedule, error) {
-	var slots []models.Shedule
+	var schedules []models.Shedule
 
-	subQuery := r.DB.WithContext(ctx).Model(&models.Appointment{}).
-		Select("schedule_id").
-		Where("status != ?", "canceled")
-
-	if err := r.DB.WithContext(ctx).Where("doctor_id = ? AND id NOT IN (?)", doctorID, subQuery).
-		Order("start_time").
-		Find(&slots).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Where("doctor_id = ? AND date >= ?", doctorID, time.Now()).Find(&schedules).Error; err != nil {
 		return nil, err
 	}
 
-	return slots, nil
+	return schedules, nil
 }
