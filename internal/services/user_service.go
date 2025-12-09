@@ -45,7 +45,7 @@ func (s *userService) CreateUser(
 		Email:     strings.TrimSpace(req.Email),
 		Phone:     strings.TrimSpace(req.Phone),
 		Password:  strings.TrimSpace(req.Password),
-		Role:      strings.TrimSpace(req.Role),
+		Role:      req.Role,
 	}
 
 	if err := s.users.Create(user); err != nil {

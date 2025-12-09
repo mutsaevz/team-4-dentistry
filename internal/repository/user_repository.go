@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/mutsaevz/team-4-dentistry/internal/constants"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"gorm.io/gorm"
 )
@@ -25,7 +26,7 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 
 func (r *gormUserRepository) Create(user *models.User) error {
 	if user == nil {
-		return nil
+		return constants.User_IS_nil
 	}
 
 	if err := r.db.Create(&user).Error; err != nil {
@@ -47,7 +48,7 @@ func (r *gormUserRepository) GetByID(id uint) (*models.User, error) {
 
 func (r *gormUserRepository) Update(user *models.User) error {
 	if user == nil {
-		return nil
+		return constants.User_IS_nil
 	}
 
 	if err := r.db.Save(&user).Error; err != nil {
