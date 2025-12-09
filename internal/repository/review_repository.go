@@ -84,19 +84,17 @@ func (r *gormReviewRepository) Delete(id uint) error {
 func (r *gormReviewRepository) GetAverageRating(ctx context.Context, doctorID uint) (float64, error) {
 	var avg sql.NullFloat64
 
-	row := r.DB.
-		WithContext(ctx).
-		Model(&models.Review{}).
+	err := r.DB.WithContext(ctx).Model(&models.Review{}).
 		Select("AVG(rating)").
 		Where("doctor_id = ?", doctorID).
-		Row()
-
-	if err := row.Scan(&avg); err != nil {
+		Scan(&avg).Error
+	if err != nil {
 		return 0, err
 	}
 
 	if !avg.Valid {
 		return 0, nil
 	}
+	
 	return avg.Float64, nil
 }
