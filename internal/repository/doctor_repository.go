@@ -12,39 +12,39 @@ import (
 var validate = validator.New()
 
 type DoctorRepository interface {
-	Create(*models.Doctor) error
+	Create(context.Context, *models.Doctor) error
 
 	GetAll(models.DoctorQueryParams, context.Context) ([]models.Doctor, error)
 
 	GetByID(uint, context.Context) (*models.Doctor, error)
 
-	Update(*models.Doctor) error
+	Update(context.Context, *models.Doctor) error
 
-	UpdateAvgRating(uint, float64) error
+	UpdateAvgRating(context.Context, uint, float64) error
 
-	Delete(uint) error
+	Delete(context.Context, uint) error
 }
 
 type gormDoctorRepository struct {
 	DB *gorm.DB
 }
 
-func NewDoctorRepositry(db *gorm.DB) DoctorRepository {
+func NewDoctorRepository(db *gorm.DB) DoctorRepository {
 	return &gormDoctorRepository{DB: db}
 }
 
-func (r *gormDoctorRepository) Create(doctor *models.Doctor) error {
+func (r *gormDoctorRepository) Create(ctx context.Context, doctor *models.Doctor) error {
 	if doctor == nil {
 		return errors.New("doctor is nil")
 	}
 
-	return r.DB.Create(doctor).Error
+	return r.DB.WithContext(ctx).Create(doctor).Error
 }
 
 func (r *gormDoctorRepository) GetAll(params models.DoctorQueryParams, ctx context.Context) ([]models.Doctor, error) {
 	var doctors []models.Doctor
 
-	q := r.DB.Model(&models.Doctor{})
+	q := r.DB.WithContext(ctx).Model(&models.Doctor{})
 
 	if err := validate.Struct(params); err != nil {
 		return nil, err
@@ -57,19 +57,19 @@ func (r *gormDoctorRepository) GetAll(params models.DoctorQueryParams, ctx conte
 			params.AvgRating)
 	} else {
 		if params.Specialization != "" {
-			q = r.DB.Where("specialization ILIKE ?", "%"+params.Specialization+"%")
+			q = q.Where("specialization ILIKE ?", "%"+params.Specialization+"%")
 		}
 
 		if params.ExperienceYears > 0 {
-			q = r.DB.Where("experience_years >= ?", params.ExperienceYears)
+			q = q.Where("experience_years >= ?", params.ExperienceYears)
 		}
 
 		if params.AvgRating > 0 {
-			q = r.DB.Where("avg_rating >= ?", params.AvgRating)
+			q = q.Where("avg_rating >= ?", params.AvgRating)
 		}
 	}
 
-	if err := q.WithContext(ctx).Find(&doctors).Error; err != nil {
+	if err := q.Find(&doctors).Error; err != nil {
 		return nil, err
 	}
 
@@ -86,20 +86,20 @@ func (r *gormDoctorRepository) GetByID(id uint, ctx context.Context) (*models.Do
 	return &doctor, nil
 }
 
-func (r *gormDoctorRepository) Update(doctor *models.Doctor) error {
+func (r *gormDoctorRepository) Update(ctx context.Context, doctor *models.Doctor) error {
 	if doctor == nil {
 		return nil
 	}
 
-	return r.DB.Save(doctor).Error
+	return r.DB.WithContext(ctx).Save(doctor).Error
 }
 
-func (r *gormDoctorRepository) UpdateAvgRating(id uint, avg float64) error {
-	return r.DB.Model(&models.Doctor{}).
+func (r *gormDoctorRepository) UpdateAvgRating(ctx context.Context, id uint, avg float64) error {
+	return r.DB.WithContext(ctx).Model(&models.Doctor{}).
 		Where("id = ?", id).
 		Update("avg_rating", avg).Error
 }
 
-func (r *gormDoctorRepository) Delete(id uint) error {
-	return r.DB.Delete(&models.Doctor{}, id).Error
+func (r *gormDoctorRepository) Delete(ctx context.Context, id uint) error {
+	return r.DB.WithContext(ctx).Delete(&models.Doctor{}, id).Error
 }
