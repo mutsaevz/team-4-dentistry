@@ -9,6 +9,11 @@ import (
 )
 
 type AppointmentService interface {
+	Create(req *models.AppointmentCreateRequest) (*models.Appointment, error)
+	Update(id uint, req models.AppointmentUpdateRequest) error
+	Delete(id uint) error
+	GetByID(id uint) (*models.Appointment, error)
+	GetAll() ([]models.Appointment, error)
 }
 
 type appointmentService struct {
@@ -104,6 +109,26 @@ func (r *appointmentService) Update(id uint, req models.AppointmentUpdateRequest
 
 	if req.Price != nil && *req.Price <= 0 {
 		return constants.ErrInvalidPrice
+	}
+
+	if req.DoctorID != nil {
+		appointments.DoctorID = *req.DoctorID
+	}
+
+	if req.PatientID != nil {
+		appointments.PatientID = *req.PatientID
+	}
+
+	if req.ServiceID != nil {
+		appointments.ServiceID = *req.ServiceID
+	}
+
+	if req.StartAt != nil {	
+		appointments.StartAt = *req.StartAt
+	}
+
+	if req.Price != nil {
+		appointments.Price = *req.Price
 	}
 
 	if err := r.appointments.Update(appointments); err != nil {
