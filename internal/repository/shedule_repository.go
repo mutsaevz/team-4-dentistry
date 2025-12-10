@@ -14,7 +14,7 @@ type SheduleRepositroy interface {
 
 	GetAll(context.Context) ([]models.Shedule, error)
 
-	GetByID(uint, context.Context) (*models.Shedule, error)
+	GetByDoctorID(uint, context.Context) (*models.Shedule, error)
 
 	GetByDateRange(context.Context, uint, time.Time, time.Time) (*models.Shedule, error)
 
@@ -55,10 +55,10 @@ func (r *gormSheduleRepository) GetAll(ctx context.Context) ([]models.Shedule, e
 	return schedules, nil
 }
 
-func (r *gormSheduleRepository) GetByID(id uint, ctx context.Context) (*models.Shedule, error) {
+func (r *gormSheduleRepository) GetByDoctorID(id uint, ctx context.Context) (*models.Shedule, error) {
 	var schedule models.Shedule
 
-	if err := r.DB.WithContext(ctx).First(&schedule, id).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Where("doctor_id = ?", id).First(&schedule).Error; err != nil {
 		return nil, err
 	}
 

@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"context"
+
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"gorm.io/gorm"
@@ -18,6 +20,8 @@ type ServiceRepository interface {
 	Update(service *models.Service) error
 
 	Delete(id uint) error
+
+	GetServicesByDoctorID(ctx context.Context, doctorID uint) ([]models.Service, error)
 }
 
 type gormServiceRepository struct {
@@ -100,4 +104,17 @@ func (r *gormServiceRepository) Delete(id uint) error {
 	}
 
 	return nil
+}
+
+func (r *gormServiceRepository) GetServicesByDoctorID(ctx context.Context, doctorID uint) ([]models.Service, error) {
+	var services []models.Service
+
+	if err := r.db.
+		WithContext(ctx).
+		Where("doctor_id = ?", doctorID).
+		Find(&services).Error; err != nil {
+		return nil, err
+	}
+
+	return services, nil
 }
