@@ -54,7 +54,7 @@ func (s *scheduleService) CreateSchedule(ctx context.Context, req models.Shedule
 }
 
 func (s *scheduleService) GetScheduleByID(ctx context.Context, id uint) (*models.Shedule, error) {
-	return s.schedule.GetByID(id, ctx)
+	return s.schedule.GetByDoctorID(id, ctx)
 }
 
 func (s *scheduleService) ListSchedules(ctx context.Context) ([]models.Shedule, error) {
@@ -62,7 +62,7 @@ func (s *scheduleService) ListSchedules(ctx context.Context) ([]models.Shedule, 
 }
 
 func (s *scheduleService) UpdateSchedule(ctx context.Context, id uint, req models.SheduleUpdateRequest) (*models.Shedule, error) {
-	schedule, err := s.schedule.GetByID(id, ctx)
+	schedule, err := s.schedule.GetByDoctorID(id, ctx)
 	if err != nil {
 		return nil, err
 	}

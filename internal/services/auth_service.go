@@ -23,6 +23,8 @@ type UserClaims struct {
 
 type AuthService interface {
 	Login(email, password string) (string, error)
+
+	GenerateToken(userID uint, role string) (string, error)
 }
 
 type authService struct {
@@ -58,7 +60,7 @@ func (s *authService) Login(email, password string) (string, error) {
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	signed, err := token.SignedString([]byte(s.jwtCfg.SecretKey))
 
@@ -67,4 +69,21 @@ func (s *authService) Login(email, password string) (string, error) {
 	}
 
 	return signed, nil
+}
+
+func (s *authService) GenerateToken(userID uint, role string) (string, error) {
+	now := time.Now()
+
+	claims := UserClaims{
+		UserID: userID,
+		Role:   role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(now),
+			ExpiresAt: jwt.NewNumericDate(now.Add(s.jwtCfg.AccessTokenTTL)),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	return token.SignedString([]byte(s.jwtCfg.SecretKey))
 }
