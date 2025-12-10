@@ -20,6 +20,9 @@ var (
 	ErrDeleteAppointments           = errors.New("delete error")
 	ErrGetByIDAppointments          = errors.New("appointment not found ")
 	ErrGetAppointments              = errors.New("error getting appointments")
+	PatientID_IS_incorrect          = errors.New("PatientID is incorrect")
+	Diagnosis_IS_empty              = errors.New("Diagnosis is empty")
+	DoctorID_IS_incorrect           = errors.New("DoctorID is incorrect")
 )
 
 
