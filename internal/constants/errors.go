@@ -21,10 +21,7 @@ var (
 	ErrGetByIDAppointments          = errors.New("appointment not found ")
 	ErrGetAppointments              = errors.New("error getting appointments")
 )
-var Appointments_IS_nil = errors.New("appointments is nil ")
-var PatientRecord_IS_nil = errors.New("PatientRecord is nil ")
-var User_IS_nil = errors.New("user is nil")
-var Service_IS_nil = errors.New("service is nil")
+
 
 // Schedule errors
 var Schedule_IS_nil = errors.New("schedule is nil")
