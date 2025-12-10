@@ -23,8 +23,10 @@ var (
 	PatientID_IS_incorrect          = errors.New("PatientID is incorrect")
 	Diagnosis_IS_empty              = errors.New("Diagnosis is empty")
 	DoctorID_IS_incorrect           = errors.New("DoctorID is incorrect")
+	Parse_ID_Error                  = errors.New("parse id  error")
+	Invalid_JSON_Error              = errors.New("invalid JSON error")
+	ErrCreateAppointment		   = errors.New("error creating appointment")
 )
-
 // Schedule errors
 var Schedule_IS_nil = errors.New("schedule is nil")
 var Schedule_Conflict = errors.New("schedule conflict detected")
