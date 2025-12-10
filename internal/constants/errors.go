@@ -20,8 +20,8 @@ var (
 	ErrDeleteAppointments           = errors.New("delete error")
 	ErrGetByIDAppointments          = errors.New("appointment not found ")
 	ErrGetAppointments              = errors.New("error getting appointments")
+	Rec_IS_nil                      = errors.New("recommendation is nil")
 )
-
 
 // Schedule errors
 var Schedule_IS_nil = errors.New("schedule is nil")
