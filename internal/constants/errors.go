@@ -4,7 +4,7 @@ import "errors"
 
 var (
 	Appointments_IS_nil             = errors.New("appointments is nil ")
-	PatientRecord_IS_nil            = errors.New("PatientRecord is nil ")
+	PatientRecord_IS_nil            = errors.New("patientRecord is nil ")
 	User_IS_nil                     = errors.New("user is nil")
 	Service_IS_nil                  = errors.New("service is nil")
 	ErrTimeNotInSchedule            = errors.New("выбранное время не входит в расписание врача")
@@ -21,6 +21,9 @@ var (
 	ErrGetByIDAppointments          = errors.New("appointment not found ")
 	ErrGetAppointments              = errors.New("error getting appointments")
 	Rec_IS_nil                      = errors.New("recommendation is nil")
+	PatientID_IS_incorrect          = errors.New("patientID is incorrect")
+	Diagnosis_IS_empty              = errors.New("diagnosis is empty")
+	DoctorID_IS_incorrect           = errors.New("doctorID is incorrect")
 )
 
 // Schedule errors
