@@ -20,7 +20,7 @@ type ReviewRepository interface {
 
 	Update(*models.Review) error
 
-	Delete(uint) error
+	Delete(context.Context, uint) error
 
 	GetAverageRating(context.Context, uint) (float64, error)
 }
@@ -77,8 +77,8 @@ func (r *gormReviewRepository) Update(req *models.Review) error {
 	return r.DB.Save(req).Error
 }
 
-func (r *gormReviewRepository) Delete(id uint) error {
-	return r.DB.Delete(&models.Review{}, id).Error
+func (r *gormReviewRepository) Delete(ctx context.Context, id uint) error {
+	return r.DB.Delete(&models.Review{}, ctx, id).Error
 }
 
 func (r *gormReviewRepository) GetAverageRating(ctx context.Context, doctorID uint) (float64, error) {
@@ -95,6 +95,6 @@ func (r *gormReviewRepository) GetAverageRating(ctx context.Context, doctorID ui
 	if !avg.Valid {
 		return 0, nil
 	}
-	
+
 	return avg.Float64, nil
 }
