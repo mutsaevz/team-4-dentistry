@@ -7,7 +7,7 @@ import (
 )
 
 type PatientRecordService interface {
-	Create(req *models.PatientRecord) (*models.PatientRecord, error)
+	Create(req *models.PatientRecordCreate) (*models.PatientRecord, error)
 	GetByID(ID uint) (*models.PatientRecord, error)
 	GetAll() ([]models.PatientRecord, error)
 	Update(id uint, req *models.PatientRecordUpdate) error
@@ -22,7 +22,7 @@ func NewPatientRecordService(repo repository.PatientRecordRepo) PatientRecordSer
 	return &patientRecord{repo: repo}
 }
 
-func (s *patientRecord) Create(req *models.PatientRecord) (*models.PatientRecord, error) {
+func (s *patientRecord) Create(req *models.PatientRecordCreate) (*models.PatientRecord, error) {
 	if req == nil {
 		return nil, constants.PatientRecord_IS_nil
 	}
@@ -39,11 +39,17 @@ func (s *patientRecord) Create(req *models.PatientRecord) (*models.PatientRecord
 		return nil, constants.DoctorID_IS_incorrect
 	}
 
-	if err := s.repo.Create(req); err != nil {
+	patientRecord := &models.PatientRecord{
+		PatientID: req.PatientID,
+		Diagnosis: req.Diagnosis,
+		DoctorID:  req.DoctorID,
+	}
+
+	if err := s.repo.Create(patientRecord); err != nil {
 		return nil, err
 	}
 
-	return req, nil
+	return patientRecord, nil
 }
 
 func (s *patientRecord) GetByID(ID uint) (*models.PatientRecord, error) {
