@@ -1,11 +1,13 @@
 package services
 
 import (
+	"errors"
 	"time"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
+	"gorm.io/gorm"
 )
 
 type AppointmentService interface {
@@ -18,7 +20,7 @@ type AppointmentService interface {
 
 type appointmentService struct {
 	serviceRepository repository.ServiceRepository
-	appointments repository.AppointmentRepository
+	appointments      repository.AppointmentRepository
 }
 
 func NewAppointmentService(service repository.ServiceRepository, appointments repository.AppointmentRepository) AppointmentService {
@@ -34,7 +36,6 @@ func (r *appointmentService) Create(req *models.AppointmentCreateRequest) (*mode
 		return nil, err
 	}
 
-
 	service, err := r.serviceRepository.GetByID(req.ServiceID)
 	if err != nil {
 		return nil, err
@@ -49,18 +50,19 @@ func (r *appointmentService) Create(req *models.AppointmentCreateRequest) (*mode
 		StartAt:   req.StartAt,
 		EndAt:     req.StartAt.Add(time.Duration(duration) * time.Minute),
 		Price:     req.Price,
-		
 	}
-	
-	if err := r.appointments.Create(appointment); err != nil {
+
+	if err := r.appointments.Transaction(func(tx *gorm.DB) error {
+		return r.appointments.CreateTx(tx, appointment)
+	}); err != nil {
 		return nil, err
 	}
 
 	return appointment, nil
 }
 
-func (r *appointmentService)validate(req *models.AppointmentCreateRequest) error {
-	if req.DoctorID <= 0  {
+func (r *appointmentService) validate(req *models.AppointmentCreateRequest) error {
+	if req.DoctorID <= 0 {
 		return constants.DoctorIDIsIncorrect
 	}
 
@@ -75,7 +77,7 @@ func (r *appointmentService)validate(req *models.AppointmentCreateRequest) error
 	if req.StartAt.Before(time.Now()) {
 		return constants.ErrInvalidAppointmentTime
 	}
-	
+
 	if req.Price < 0 {
 		return constants.ErrInvalidPrice
 	}
@@ -83,12 +85,15 @@ func (r *appointmentService)validate(req *models.AppointmentCreateRequest) error
 	return nil
 }
 
-func (r *appointmentService) Update(id uint, req models.AppointmentUpdateRequest)(error){
+func (r *appointmentService) Update(id uint, req models.AppointmentUpdateRequest) error {
 
-	appointments, err := r.appointments.GetByID(id) 
+	appointments, err := r.appointments.GetByID(id)
 
-	if err != nil{
-		return constants.ErrInvalidAppointmentID
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return constants.ErrInvalidAppointmentID
+		}
+		return err
 	}
 
 	if req.DoctorID != nil && *req.DoctorID <= 0 {
@@ -99,15 +104,15 @@ func (r *appointmentService) Update(id uint, req models.AppointmentUpdateRequest
 		return constants.PatientIDIsIncorrect
 	}
 
-	if req.ServiceID != nil && *req.ServiceID <= 0{
+	if req.ServiceID != nil && *req.ServiceID <= 0 {
 		return constants.ServiceIDIsIncorrect
 	}
 
-	if req.StartAt != nil && req.StartAt.Before(time.Now()){
+	if req.StartAt != nil && req.StartAt.Before(time.Now()) {
 		return constants.ErrInvalidAppointmentTime
 	}
 
-	if req.Price != nil && *req.Price <= 0 {
+	if req.Price != nil && *req.Price < 0 {
 		return constants.ErrInvalidPrice
 	}
 
@@ -123,15 +128,25 @@ func (r *appointmentService) Update(id uint, req models.AppointmentUpdateRequest
 		appointments.ServiceID = *req.ServiceID
 	}
 
-	if req.StartAt != nil {	
+	if req.StartAt != nil {
 		appointments.StartAt = *req.StartAt
+
+		service, err := r.serviceRepository.GetByID(appointments.ServiceID)
+		if err != nil {
+			return err
+		}
+		duration := service.Duration
+		appointments.EndAt = req.StartAt.Add(time.Duration(duration) * time.Minute)
 	}
 
 	if req.Price != nil {
 		appointments.Price = *req.Price
 	}
 
-	if err := r.appointments.Update(appointments); err != nil {
+
+	if err := r.appointments.Transaction(func(tx *gorm.DB) error {
+		return r.appointments.UpdateTx(tx, appointments)
+	}); err != nil {
 		return constants.ErrUpdateAppointments
 	}
 
@@ -164,8 +179,10 @@ func (r *appointmentService) GetByID(id uint) (*models.Appointment, error) {
 
 func (r *appointmentService) GetAll() ([]models.Appointment, error) {
 	appointments, err := r.appointments.Get()
+	
 	if err != nil {
 		return nil, constants.ErrGetAppointments
 	}
+
 	return appointments, nil
 }
