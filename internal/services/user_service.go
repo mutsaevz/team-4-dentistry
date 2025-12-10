@@ -6,6 +6,7 @@ import (
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -15,6 +16,8 @@ type UserService interface {
 	CreateUser(req models.UserCreateRequest) (*models.User, error)
 
 	GetUserById(id uint) (*models.User, error)
+
+	ListUsers(offset, limit int) ([]models.User, error)
 
 	UpdateUser(id uint, req models.UserUpdateRequest) (*models.User, error)
 
@@ -31,6 +34,20 @@ func NewUserService(
 	return &userService{users: users}
 }
 
+func hashPassword(plain string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(plain), 14)
+
+	if err != nil {
+		return "", nil
+	}
+
+	return string(hash), nil
+}
+
+func checkPassword(hash, plain string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(plain))
+}
+
 func (s *userService) CreateUser(
 	req models.UserCreateRequest,
 ) (*models.User, error) {
@@ -39,13 +56,19 @@ func (s *userService) CreateUser(
 		return nil, err
 	}
 
+	hashed, err := hashPassword(req.Password)
+
+	if err != nil {
+		return nil, err
+	}
+
 	user := &models.User{
 		FirstName: strings.TrimSpace(req.FirstName),
 		LastName:  strings.TrimSpace(req.LastName),
 		Email:     strings.TrimSpace(req.Email),
 		Phone:     strings.TrimSpace(req.Phone),
-		Password:  strings.TrimSpace(req.Password),
-		Role:      req.Role,
+		Password:  hashed,
+		Role:      models.Role(strings.TrimSpace(string(req.Role))),
 	}
 
 	if err := s.users.Create(user); err != nil {
@@ -66,6 +89,16 @@ func (s *userService) GetUserById(id uint) (*models.User, error) {
 	}
 
 	return user, nil
+}
+
+func (s *userService) ListUsers(offset, limit int) ([]models.User, error) {
+	users, err := s.users.List(offset, limit)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
 
 func (s *userService) UpdateUser(
@@ -115,12 +148,28 @@ func (s *userService) ValidateCreateUser(req models.UserCreateRequest) error {
 		return errors.New("фамилия не должна быть пустой")
 	}
 
+	if strings.TrimSpace(req.Email) == "" {
+		return errors.New("email не должен быть пустым")
+	}
+
 	if req.Password == "" {
 		return errors.New("пароль не должен быть пустым")
 	}
 
 	if req.Phone == "" {
 		return errors.New("телефон не должен быть пустым")
+	}
+
+	if strings.TrimSpace(string(req.Role)) == "" {
+		return errors.New("роль не должна быть пустой")
+	}
+
+	role := strings.TrimSpace(string(req.Role))
+
+	switch role {
+	case "admin", "doctor", "patient":
+	default:
+		return errors.New("некорректная роль")
 	}
 
 	return nil
@@ -155,7 +204,11 @@ func (s *userService) ApplyUserUpdate(
 			return errors.New("пароль не должен быть пустым")
 		}
 
-		user.Password = *req.Password
+		hashed, err := hashPassword(trimmed)
+		if err != nil {
+			return err
+		}
+		user.Password = hashed
 	}
 	if req.Phone != nil {
 		trimmed := strings.TrimSpace(*req.Phone)
@@ -164,5 +217,28 @@ func (s *userService) ApplyUserUpdate(
 		}
 		user.Phone = trimmed
 	}
+
+	if req.Email != nil {
+		trimmed := strings.TrimSpace(*req.Email)
+		if trimmed == "" {
+			return errors.New("email не должен быть пустым")
+		}
+		user.Email = trimmed
+	}
+
+	if req.Role != nil {
+		trimmed := strings.TrimSpace(string(*req.Role))
+		if trimmed == "" {
+			return errors.New("Role не должен быть пустым")
+		}
+		switch trimmed {
+		case "admin", "doctor", "patient":
+			user.Role = models.Role(trimmed)
+		default:
+			return errors.New("некорректная роль")
+		}
+
+	}
+
 	return nil
 }

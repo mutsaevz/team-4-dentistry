@@ -16,7 +16,6 @@ type Appointment struct {
 	Price              int        `json:"price_cents,omitempty"`
 	Paid               bool       `json:"paid" gorm:"default:false"`
 	CancelledAt        *time.Time `json:"cancelled_at,omitempty"`
-	CancellationReason string     `json:"cancellation_reason,omitempty"`
 }
 
 type AppointmentCreateRequest struct {

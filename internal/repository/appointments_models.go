@@ -79,6 +79,7 @@ func (r *gormAppointmentRepository) Update(appointment *models.Appointment) erro
 		Count(&count).Error; err != nil {
 		return err
 	}
+
 	if count > 0 {
 		return constants.ErrTimeConflict
 	}
@@ -88,11 +89,12 @@ func (r *gormAppointmentRepository) Update(appointment *models.Appointment) erro
 		Count(&count).Error; err != nil {
 		return err
 	}
+	
 	if count > 0 {
 		return constants.ErrTimeConflict
 	}
 
-	return r.DB.Save(appointment).Error
+	return r.DB.Preload("Service").Preload("Doctor").Preload("Patient").Save(appointment).Error
 }
 
 func (r *gormAppointmentRepository) Delete(id uint) error {
@@ -104,7 +106,7 @@ func (r *gormAppointmentRepository) Delete(id uint) error {
 func (r *gormAppointmentRepository) GetByID(id uint) (*models.Appointment, error) {
 	var appointment models.Appointment
 
-	if err := r.DB.First(&appointment, id).Error; err != nil {
+	if err := r.DB.Preload("Service").Preload("Doctor").Preload("Patient").First(&appointment, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -114,7 +116,7 @@ func (r *gormAppointmentRepository) GetByID(id uint) (*models.Appointment, error
 func (r *gormAppointmentRepository) Get() ([]models.Appointment, error) {
 	var appointments []models.Appointment
 
-	if err := r.DB.Find(&appointments).Error; err != nil {
+	if err := r.DB.Preload("Service").Preload("Doctor").Preload("Patient").Find(&appointments).Error; err != nil {
 		return nil, err
 	}
 
