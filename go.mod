@@ -5,6 +5,7 @@ go 1.25.4
 require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-playground/validator/v10 v10.28.0
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/jackc/pgx/v5 v5.7.6
 	gorm.io/gorm v1.31.1
 )
