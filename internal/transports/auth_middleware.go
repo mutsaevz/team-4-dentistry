@@ -30,7 +30,7 @@ func AuthMiddleware(jwtCfg services.JWTConfig) gin.HandlerFunc {
 
 		tokenStr := parts[1]
 
-		token, err := jwt.ParseWithClaims(tokenStr, services.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenStr, &services.UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, jwt.ErrTokenSignatureInvalid
 			}
@@ -54,6 +54,42 @@ func AuthMiddleware(jwtCfg services.JWTConfig) gin.HandlerFunc {
 		}
 		ctx.Set("userID", claims.UserID)
 		ctx.Set("Role", claims.Role)
+
+		ctx.Next()
+	}
+}
+
+func RequireRole(roles ...string) gin.HandlerFunc {
+	roleSet := make(map[string]struct{}, len(roles))
+
+	for _, r := range roles {
+		roleSet[r] = struct{}{}
+	}
+
+	return func(ctx *gin.Context) {
+		roleVal, exists := ctx.Get("userRole")
+
+		if !exists {
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": "нет роли в токене",
+			})
+			return
+		}
+
+		role, ok := roleVal.(string)
+		if !ok {
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": "недопустимая роль в context",
+			})
+			return
+		}
+
+		if _, ok := roleSet[role]; !ok {
+			ctx.AbortWithStatusJSON(http.StatusForbidden, gin.H{
+				"error": "в доступе отказано",
+			})
+			return
+		}
 
 		ctx.Next()
 	}

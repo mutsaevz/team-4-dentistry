@@ -6,6 +6,7 @@ import (
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -33,6 +34,20 @@ func NewUserService(
 	return &userService{users: users}
 }
 
+func hashPassword(plain string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(plain), 14)
+
+	if err != nil {
+		return "", nil
+	}
+
+	return string(hash), nil
+}
+
+func checkPassword(hash, plain string) error {
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(plain))
+}
+
 func (s *userService) CreateUser(
 	req models.UserCreateRequest,
 ) (*models.User, error) {
@@ -41,12 +56,18 @@ func (s *userService) CreateUser(
 		return nil, err
 	}
 
+	hashed, err := hashPassword(req.Password)
+
+	if err != nil {
+		return nil, err
+	}
+
 	user := &models.User{
 		FirstName: strings.TrimSpace(req.FirstName),
 		LastName:  strings.TrimSpace(req.LastName),
 		Email:     strings.TrimSpace(req.Email),
 		Phone:     strings.TrimSpace(req.Phone),
-		Password:  req.Password,
+		Password:  hashed,
 		Role:      models.Role(strings.TrimSpace(string(req.Role))),
 	}
 
@@ -183,7 +204,11 @@ func (s *userService) ApplyUserUpdate(
 			return errors.New("пароль не должен быть пустым")
 		}
 
-		user.Password = *req.Password
+		hashed, err := hashPassword(trimmed)
+		if err != nil {
+			return err
+		}
+		user.Password = hashed
 	}
 	if req.Phone != nil {
 		trimmed := strings.TrimSpace(*req.Phone)
