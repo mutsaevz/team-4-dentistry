@@ -24,6 +24,7 @@ func (h *UserHandler) RegisterRoutes(r *gin.Engine) {
 	users := r.Group("/users")
 
 	{
+		users.GET("/me", h.Me)
 		users.POST("", h.Create)
 		users.GET("", h.List)
 		users.GET("/:id", h.GetByID)
@@ -48,6 +49,32 @@ func (h *UserHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, user)
+}
+
+func (h *UserHandler) Me(c *gin.Context) {
+	idVal, exists := c.Get("userID")
+
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неавторизован"})
+		return
+	}
+
+	userID, ok := idVal.(uint)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "некорректный userID в context",
+		})
+		return
+	}
+
+	user, err := h.service.GetUserById(userID)
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 func (h *UserHandler) GetByID(c *gin.Context) {
