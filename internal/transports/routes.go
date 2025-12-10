@@ -10,10 +10,16 @@ func RegisterRoutes(
 	servService services.ServService,
 	userService services.UserService,
 	authService services.AuthService,
+	jwtCfg services.JWTConfig,
 ) {
+	authHandler := NewAuthHandler(authService, userService)
 	serviceHandler := NewServiceHandler(servService)
 	userHandler := NewUserHandler(userService)
 
-	serviceHandler.RegisterRoutes(router)
-	userHandler.RegisterRoutes(router)
+	authHandler.RegisterRoutes(router)
+
+	api := router.Group("/api")
+
+	serviceHandler.RegisterRoutes(api)
+	userHandler.RegisterRoutes(api)
 }

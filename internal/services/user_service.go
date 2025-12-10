@@ -22,6 +22,8 @@ type UserService interface {
 	UpdateUser(id uint, req models.UserUpdateRequest) (*models.User, error)
 
 	DeleteUser(id uint) error
+
+	ChangePassword(userID uint, oldPassword, newPassword string) error
 }
 
 type userService struct {
@@ -38,7 +40,7 @@ func hashPassword(plain string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(plain), 14)
 
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return string(hash), nil
@@ -133,6 +135,40 @@ func (s *userService) DeleteUser(id uint) error {
 	}
 
 	if err := s.users.Delete(id); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *userService) ChangePassword(
+	userID uint,
+	oldPassword,
+	newPassword string,
+) error {
+	user, err := s.users.GetByID(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrUserNotFound
+		}
+		return err
+	}
+	if err := checkPassword(user.Password, oldPassword); err != nil {
+		return errors.New("старый пароль неверен")
+	}
+
+	if strings.TrimSpace(newPassword) == "" {
+		return errors.New("новый пароль не должен быть пустым")
+	}
+
+	hashed, err := hashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	user.Password = hashed
+
+	if err := s.users.Update(user); err != nil {
 		return err
 	}
 

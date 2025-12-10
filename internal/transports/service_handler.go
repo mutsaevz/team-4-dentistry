@@ -20,13 +20,13 @@ func NewServiceHandler(
 	return &ServiceHandler{service: service}
 }
 
-func (h *ServiceHandler) RegisterRoutes(r *gin.Engine) {
+func (h *ServiceHandler) RegisterRoutes(r *gin.RouterGroup) {
 	services := r.Group("/services")
 	{
 		services.GET("/:id", h.GetByID)
 		services.GET("", h.List)
 		services.POST("", h.Create)
-		services.PATCH("/:id", h.Update)
+		services.PUT("/:id", h.Update)
 		services.DELETE("/:id", h.Delete)
 	}
 }
@@ -74,8 +74,8 @@ func (h *ServiceHandler) GetByID(c *gin.Context) {
 }
 
 func (h *ServiceHandler) List(c *gin.Context) {
-	offsetStr := c.Query("offset")
-	limitStr := c.Query("limit")
+	offsetStr := c.DefaultQuery("offset", "0")
+	limitStr := c.DefaultQuery("limit", "20")
 	category := c.Query("category")
 
 	offset, err := strconv.Atoi(offsetStr)
@@ -97,6 +97,7 @@ func (h *ServiceHandler) List(c *gin.Context) {
 			return
 		}
 		c.JSON(http.StatusOK, services)
+		return
 	}
 
 	services, err := h.service.ListServices(offset, limit)

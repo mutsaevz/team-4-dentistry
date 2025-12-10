@@ -22,7 +22,7 @@ func AuthMiddleware(jwtCfg services.JWTConfig) gin.HandlerFunc {
 		parts := strings.SplitN(authHeader, " ", 2)
 
 		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 				"error": "неверный заголовок в Authorization",
 			})
 			return
@@ -53,7 +53,7 @@ func AuthMiddleware(jwtCfg services.JWTConfig) gin.HandlerFunc {
 			return
 		}
 		ctx.Set("userID", claims.UserID)
-		ctx.Set("Role", claims.Role)
+		ctx.Set("userRole", claims.Role)
 
 		ctx.Next()
 	}
