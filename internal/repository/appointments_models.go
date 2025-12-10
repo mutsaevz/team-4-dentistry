@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"time"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
@@ -28,12 +29,67 @@ func (r *gormAppointmentRepository) Create(appointment *models.Appointment) erro
 		return constants.Appointments_IS_nil
 	}
 
-	return r.DB.Create(appointment).Error
+	dateOnly := time.Date(appointment.StartAt.Year(), appointment.StartAt.Month(), appointment.StartAt.Day(), 0, 0, 0, 0, appointment.StartAt.Location())
+	var schedule models.Shedule
+	if err := r.DB.Where("doctor_id = ? AND date = ? AND start_time <= ? AND end_time >= ?", appointment.DoctorID, dateOnly, appointment.StartAt, appointment.EndAt).First(&schedule).Error; err != nil {
+		
+			return constants.ErrTimeNotInSchedule
+		}
+	
+
+
+	var count int64
+	if err := r.DB.Model(&models.Appointment{}).
+		Where("doctor_id = ? AND cancelled_at IS NULL AND start_at < ? AND end_at > ?", appointment.DoctorID, appointment.EndAt, appointment.StartAt).
+		Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return constants.ErrTimeConflict
+	}
+
+
+	if err := r.DB.Model(&models.Appointment{}).
+		Where("patient_id = ? AND cancelled_at IS NULL AND start_at < ? AND end_at > ?", appointment.PatientID, appointment.EndAt, appointment.StartAt).
+		Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return constants.ErrTimeConflict
+	}
+
+	return r.DB.Preload("Service").Preload("Doctor").Preload("Patient").Create(appointment).Error
 }
 
 func (r *gormAppointmentRepository) Update(appointment *models.Appointment) error {
 	if appointment == nil {
 		return constants.Appointments_IS_nil
+	}
+
+	dateOnly := time.Date(appointment.StartAt.Year(), appointment.StartAt.Month(), appointment.StartAt.Day(), 0, 0, 0, 0, appointment.StartAt.Location())
+	var schedule models.Shedule
+	if err := r.DB.Where("doctor_id = ? AND date = ? AND start_time <= ? AND end_time >= ?", appointment.DoctorID, dateOnly, appointment.StartAt, appointment.EndAt).First(&schedule).Error; err != nil {
+		
+			return constants.ErrTimeNotInSchedule
+		}
+
+		var count int64
+	if err := r.DB.Model(&models.Appointment{}).
+		Where("doctor_id = ? AND cancelled_at IS NULL AND start_at < ? AND end_at > ?", appointment.DoctorID, appointment.EndAt, appointment.StartAt).
+		Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return constants.ErrTimeConflict
+	}
+
+	if err := r.DB.Model(&models.Appointment{}).
+		Where("patient_id = ? AND cancelled_at IS NULL AND start_at < ? AND end_at > ?", appointment.PatientID, appointment.EndAt, appointment.StartAt).
+		Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return constants.ErrTimeConflict
 	}
 
 	return r.DB.Save(appointment).Error
