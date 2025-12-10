@@ -12,7 +12,7 @@ import (
 
 type AppointmentService interface {
 	Create(req *models.AppointmentCreateRequest) (*models.Appointment, error)
-	Update(id uint, req models.AppointmentUpdateRequest) error
+	Update(id uint, req *models.AppointmentUpdateRequest) error
 	Delete(id uint) error
 	GetByID(id uint) (*models.Appointment, error)
 	GetAll() ([]models.Appointment, error)
@@ -85,7 +85,7 @@ func (r *appointmentService) validate(req *models.AppointmentCreateRequest) erro
 	return nil
 }
 
-func (r *appointmentService) Update(id uint, req models.AppointmentUpdateRequest) error {
+func (r *appointmentService) Update(id uint, req *models.AppointmentUpdateRequest) error {
 
 	appointments, err := r.appointments.GetByID(id)
 
@@ -179,7 +179,7 @@ func (r *appointmentService) GetByID(id uint) (*models.Appointment, error) {
 
 func (r *appointmentService) GetAll() ([]models.Appointment, error) {
 	appointments, err := r.appointments.Get()
-	
+
 	if err != nil {
 		return nil, constants.ErrGetAppointments
 	}
