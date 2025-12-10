@@ -52,3 +52,12 @@ type UserUpdateRequest struct {
 	Gender      *Gender `json:"gender"`
 	DateOfBirth *string `json:"date_of_birth"`
 }
+
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Token string `json:"token"`
+}
