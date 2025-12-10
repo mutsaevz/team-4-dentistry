@@ -27,13 +27,13 @@ func (r *gormPatientRecordRepo) Create(patientRecord *models.PatientRecord)error
 		return constants.PatientRecord_IS_nil
 	}
 
-	return r.DB.Create(patientRecord).Error
+	return r.DB.Preload("patient").Create(patientRecord).Error
 }
 
 func (r *gormPatientRecordRepo) GetID(ID uint) (*models.PatientRecord,error){
 	var patientRecord models.PatientRecord
 
-	if err := r.DB.First(&patientRecord,ID).Error; err != nil{
+	if err := r.DB.Preload("patient").First(&patientRecord,ID).Error; err != nil{
 		return nil, err
 	}
 
@@ -43,7 +43,7 @@ func (r *gormPatientRecordRepo) GetID(ID uint) (*models.PatientRecord,error){
 func (r *gormPatientRecordRepo) Get() ([]models.PatientRecord, error) {
 	var patientRecord []models.PatientRecord
 
-	if err := r.DB.Find(&patientRecord).Error; err != nil {
+	if err := r.DB.Preload("patient").Find(&patientRecord).Error; err != nil {
 		return nil, err
 	}
 
@@ -55,7 +55,7 @@ func (r *gormPatientRecordRepo) Update(patientRecord *models.PatientRecord) erro
 		return constants.PatientRecord_IS_nil
 	}
 	
-	return r.DB.Save(patientRecord).Error
+	return r.DB.Preload("patient").Save(patientRecord).Error
 }
 
 func (r *gormPatientRecordRepo) Delete(ID uint) error{
