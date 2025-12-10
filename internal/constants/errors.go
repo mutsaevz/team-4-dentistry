@@ -25,6 +25,7 @@ var (
 	DoctorID_IS_incorrect           = errors.New("DoctorID is incorrect")
 )
 
+
 // Schedule errors
 var Schedule_IS_nil = errors.New("schedule is nil")
 var Schedule_Conflict = errors.New("schedule conflict detected")

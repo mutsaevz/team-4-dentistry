@@ -20,15 +20,14 @@ func NewUserHandler(
 	return &UserHandler{service: service}
 }
 
-func (h *UserHandler) RegisterRoutes(r *gin.Engine) {
+func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 	users := r.Group("/users")
 
 	{
-		users.GET("/me", h.Me)
 		users.POST("", h.Create)
 		users.GET("", h.List)
 		users.GET("/:id", h.GetByID)
-		users.PATCH("/:id", h.Update)
+		users.PUT("/:id", h.Update)
 		users.DELETE("/:id", h.Delete)
 	}
 }
@@ -49,32 +48,6 @@ func (h *UserHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, user)
-}
-
-func (h *UserHandler) Me(c *gin.Context) {
-	idVal, exists := c.Get("userID")
-
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неавторизован"})
-		return
-	}
-
-	userID, ok := idVal.(uint)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "некорректный userID в context",
-		})
-		return
-	}
-
-	user, err := h.service.GetUserById(userID)
-
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, user)
 }
 
 func (h *UserHandler) GetByID(c *gin.Context) {
@@ -100,8 +73,8 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 }
 
 func (h *UserHandler) List(c *gin.Context) {
-	offsetStr := c.Query("offset")
-	limitStr := c.Query("limit")
+	offsetStr := c.DefaultQuery("offset", "0")
+	limitStr := c.DefaultQuery("limit", "20")
 
 	offset, err := strconv.Atoi(offsetStr)
 
