@@ -27,6 +27,7 @@ var (
 	Parse_ID_Error                  = errors.New("parse id  error")
 	Invalid_JSON_Error              = errors.New("invalid json error")
 	ErrCreateAppointment            = errors.New("error creating appointment")
+	User_appointments_Not_Found     = errors.New("user appointments not found")
 )
 
 // Schedule errors

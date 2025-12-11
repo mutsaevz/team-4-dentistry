@@ -27,7 +27,7 @@ func (r *gormPatientRecordRepo) Create(patientRecord *models.PatientRecord) erro
 		return constants.PatientRecord_IS_nil
 	}
 
-	return r.DB.Preload("patient").Create(patientRecord).Error
+	return r.DB.Create(patientRecord).Error
 }
 
 func (r *gormPatientRecordRepo) GetID(ID uint) (*models.PatientRecord, error) {
@@ -54,8 +54,8 @@ func (r *gormPatientRecordRepo) Update(patientRecord *models.PatientRecord) erro
 	if patientRecord == nil {
 		return constants.PatientRecord_IS_nil
 	}
-
-	return r.DB.Preload("patient").Save(patientRecord).Error
+	
+	return r.DB.Save(patientRecord).Error
 }
 
 func (r *gormPatientRecordRepo) Delete(ID uint) error {

@@ -16,6 +16,7 @@ type AppointmentRepository interface {
 	Transaction(func(tx *gorm.DB) error) error
 	CreateTx(tx *gorm.DB, appointment *models.Appointment) error
 	UpdateTx(tx *gorm.DB, appointment *models.Appointment) error
+	GetByPatientID(patientID uint)([]models.Appointment, error)
 }
 type gormAppointmentRepository struct {
 	DB *gorm.DB
@@ -125,4 +126,14 @@ func (r *gormAppointmentRepository) UpdateTx(tx *gorm.DB, appointment *models.Ap
 	}
 
 	return tx.Save(appointment).Error
+}
+
+func (r *gormAppointmentRepository) GetByPatientID(patientID uint)([]models.Appointment, error){
+	var appointment []models.Appointment
+
+	if err := r.DB.Where("user_id = ?", patientID).Find(&appointment); err != nil {
+		return nil, constants.User_appointments_Not_Found
+	}
+
+	return appointment, nil
 }

@@ -42,7 +42,7 @@ func (r *gormRecommendationRepository) GetByID(id uint) (*models.Recommendation,
 	if err := r.db.
 		Preload("Service").
 		Preload("Patient").
-		First(&rec).Error; err != nil {
+		First(&rec, id).Error; err != nil {
 		return nil, err
 	}
 
