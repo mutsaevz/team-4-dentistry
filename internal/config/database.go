@@ -1,33 +1,35 @@
 package config
 
 import (
-	"context"
 	"fmt"
-	"log"
 	"os"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-func ConnectDB() *pgx.Conn {
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
-	host := os.Getenv("DB_HOST")
-	port := os.Getenv("DB_PORT")
-	dbname := os.Getenv("DB_NAME")
-	sslmode := os.Getenv("DB_SSLMODE")
-
-	if user == "" || password == "" || host == "" || port == "" || dbname == "" {
-		log.Fatal("Одно из значений не задано")
+func SetUpDatabaseConnection() *gorm.DB {
+	if err := godotenv.Load(); err != nil {
+		panic(err)
 	}
 
-	url := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=%s", user, password, host, port, dbname, sslmode)
+	dbUser := os.Getenv("DB_USER")
+	dbPass := os.Getenv("DB_PASS")
+	dbHost := os.Getenv("DB_HOST")
+	dbName := os.Getenv("DB_NAME")
+	dbPort := os.Getenv("DB_PORT")
 
-	conn, err := pgx.Connect(context.Background(), url)
+	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v", dbHost, dbUser, dbPass, dbName, dbPort)
+
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  dsn,
+		PreferSimpleProtocol: true,
+	}), &gorm.Config{})
+
 	if err != nil {
-		log.Fatalf("Не удалось подключиться: %v", err)
+		panic(err)
 	}
 
-	log.Println("Подключение к базе прошло успешно!")
-	return conn
+	return db
 }
