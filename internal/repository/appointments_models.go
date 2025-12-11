@@ -62,7 +62,7 @@ func (r *gormAppointmentRepository) CreateTx(tx *gorm.DB, appointment *models.Ap
 	}
 
 	dateOnly := time.Date(appointment.StartAt.Year(), appointment.StartAt.Month(), appointment.StartAt.Day(), 0, 0, 0, 0, appointment.StartAt.Location())
-	var schedule models.Shedule
+	var schedule models.Schedule
 	if err := tx.Where("doctor_id = ? AND date = ? AND start_time <= ? AND end_time >= ?", appointment.DoctorID, dateOnly, appointment.StartAt, appointment.EndAt).First(&schedule).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return constants.ErrTimeNotInSchedule
@@ -98,7 +98,7 @@ func (r *gormAppointmentRepository) UpdateTx(tx *gorm.DB, appointment *models.Ap
 	}
 
 	dateOnly := time.Date(appointment.StartAt.Year(), appointment.StartAt.Month(), appointment.StartAt.Day(), 0, 0, 0, 0, appointment.StartAt.Location())
-	var schedule models.Shedule
+	var schedule models.Schedule
 	if err := tx.Where("doctor_id = ? AND date = ? AND start_time <= ? AND end_time >= ?", appointment.DoctorID, dateOnly, appointment.StartAt, appointment.EndAt).First(&schedule).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return constants.ErrTimeNotInSchedule

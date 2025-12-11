@@ -22,13 +22,16 @@ func NewServiceHandler(
 
 func (h *ServiceHandler) RegisterRoutes(r *gin.RouterGroup) {
 	services := r.Group("/services")
-	{
-		services.GET("/:id", h.GetByID)
-		services.GET("", h.List)
-		services.POST("", h.Create)
-		services.PUT("/:id", h.Update)
-		services.DELETE("/:id", h.Delete)
-	}
+
+	services.GET("/:id", h.GetByID)
+	services.GET("", h.List)
+
+	admin := services.Group("")
+	admin.Use(RequireRole("admin"))
+	admin.POST("", h.Create)
+	admin.PUT("/:id", h.Update)
+	admin.DELETE("/:id", h.Delete)
+
 }
 
 func (h *ServiceHandler) Create(c *gin.Context) {

@@ -23,13 +23,15 @@ func NewUserHandler(
 func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 	users := r.Group("/users")
 
-	{
-		users.POST("", h.Create)
-		users.GET("", h.List)
-		users.GET("/:id", h.GetByID)
-		users.PUT("/:id", h.Update)
-		users.DELETE("/:id", h.Delete)
-	}
+	admin := users.Group("")
+	admin.Use(RequireRole("admin"))
+
+	admin.POST("", h.Create)
+	admin.GET("", h.List)
+	admin.GET("/:id", h.GetByID)
+	admin.PUT("/:id", h.Update)
+	admin.DELETE("/:id", h.Delete)
+
 }
 
 func (h *UserHandler) Create(c *gin.Context) {
