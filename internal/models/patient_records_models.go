@@ -11,9 +11,7 @@ type PatientRecord struct {
 
 type PatientRecordCreate struct {
 	PatientID uint    `json:"patient_id" validate:"required"`
-	Patient   *User   `json:"patient,omitempty" validate:"omitempty"`
 	DoctorID  uint    `json:"doctor_id" validate:"required"`
-	Doctor    *Doctor `json:"doctor,omitempty" validate:"omitempty"`
 	Diagnosis string  `json:"diagnosis,omitempty" validate:"omitempty"`
 }
 
