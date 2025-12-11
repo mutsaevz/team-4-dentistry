@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,7 +16,9 @@ import (
 )
 
 func main() {
+
 	db := config.SetUpDatabaseConnection()
+	fmt.Println("DB_HOST:", os.Getenv("DB_HOST"))
 
 	userRepo := repository.NewUserRepository(db)
 	serviceRepo := repository.NewServiceRepository(db)

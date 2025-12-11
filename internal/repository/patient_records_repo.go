@@ -18,22 +18,22 @@ type gormPatientRecordRepo struct {
 	DB *gorm.DB
 }
 
-func NewPatientRecordRepo (db *gorm.DB)PatientRecordRepo{
+func NewPatientRecordRepo(db *gorm.DB) PatientRecordRepo {
 	return &gormPatientRecordRepo{DB: db}
 }
 
-func (r *gormPatientRecordRepo) Create(patientRecord *models.PatientRecord)error{
-	if patientRecord == nil{
+func (r *gormPatientRecordRepo) Create(patientRecord *models.PatientRecord) error {
+	if patientRecord == nil {
 		return constants.PatientRecord_IS_nil
 	}
 
 	return r.DB.Create(patientRecord).Error
 }
 
-func (r *gormPatientRecordRepo) GetID(ID uint) (*models.PatientRecord,error){
+func (r *gormPatientRecordRepo) GetID(ID uint) (*models.PatientRecord, error) {
 	var patientRecord models.PatientRecord
 
-	if err := r.DB.Preload("patient").First(&patientRecord,ID).Error; err != nil{
+	if err := r.DB.Preload("patient").First(&patientRecord, ID).Error; err != nil {
 		return nil, err
 	}
 
@@ -51,13 +51,13 @@ func (r *gormPatientRecordRepo) Get() ([]models.PatientRecord, error) {
 }
 
 func (r *gormPatientRecordRepo) Update(patientRecord *models.PatientRecord) error {
-	if patientRecord == nil{
+	if patientRecord == nil {
 		return constants.PatientRecord_IS_nil
 	}
 	
 	return r.DB.Save(patientRecord).Error
 }
 
-func (r *gormPatientRecordRepo) Delete(ID uint) error{
-	return r.DB.Delete(&models.PatientRecord{},ID).Error
+func (r *gormPatientRecordRepo) Delete(ID uint) error {
+	return r.DB.Delete(&models.PatientRecord{}, ID).Error
 }

@@ -78,7 +78,7 @@ func (r *gormReviewRepository) Update(req *models.Review) error {
 }
 
 func (r *gormReviewRepository) Delete(ctx context.Context, id uint) error {
-	return r.DB.Delete(&models.Review{}, ctx, id).Error
+	return r.DB.WithContext(ctx).Delete(&models.Review{}, id).Error
 }
 
 func (r *gormReviewRepository) GetAverageRating(ctx context.Context, doctorID uint) (float64, error) {

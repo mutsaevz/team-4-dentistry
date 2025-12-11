@@ -21,11 +21,11 @@ type ScheduleService interface {
 }
 
 type scheduleService struct {
-	schedule repository.ScheduleRepositroy
+	schedule repository.ScheduleRepository
 	doctor   repository.DoctorRepository
 }
 
-func NewScheduleService(repoSchedule repository.ScheduleRepositroy, repoDoctor repository.DoctorRepository) ScheduleService {
+func NewScheduleService(repoSchedule repository.ScheduleRepository, repoDoctor repository.DoctorRepository) ScheduleService {
 	return &scheduleService{
 		schedule: repoSchedule,
 		doctor:   repoDoctor,
