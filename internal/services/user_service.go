@@ -24,6 +24,8 @@ type UserService interface {
 	DeleteUser(id uint) error
 
 	ChangePassword(userID uint, oldPassword, newPassword string) error
+
+	
 }
 
 type userService struct {

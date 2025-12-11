@@ -9,35 +9,35 @@ import (
 )
 
 type ScheduleService interface {
-	CreateSchedule(ctx context.Context, req models.SheduleCreateRequest) (*models.Shedule, error)
+	CreateSchedule(ctx context.Context, req models.ScheduleCreateRequest) (*models.Schedule, error)
 
-	GetScheduleByID(ctx context.Context, id uint) (*models.Shedule, error)
+	GetScheduleByID(ctx context.Context, id uint) (*models.Schedule, error)
 
-	ListSchedules(ctx context.Context) ([]models.Shedule, error)
+	ListSchedules(ctx context.Context) ([]models.Schedule, error)
 
-	UpdateSchedule(ctx context.Context, id uint, req models.SheduleUpdateRequest) (*models.Shedule, error)
+	UpdateSchedule(ctx context.Context, id uint, req models.ScheduleUpdateRequest) (*models.Schedule, error)
 
 	DeleteSchedule(ctx context.Context, id uint) error
 }
 
 type scheduleService struct {
-	schedule repository.SheduleRepositroy
+	schedule repository.ScheduleRepositroy
 	doctor   repository.DoctorRepository
 }
 
-func NewSheduleService(repoShedule repository.SheduleRepositroy, repoDoctor repository.DoctorRepository) ScheduleService {
+func NewScheduleService(repoSchedule repository.ScheduleRepositroy, repoDoctor repository.DoctorRepository) ScheduleService {
 	return &scheduleService{
-		schedule: repoShedule,
+		schedule: repoSchedule,
 		doctor:   repoDoctor,
 	}
 }
 
-func (s *scheduleService) CreateSchedule(ctx context.Context, req models.SheduleCreateRequest) (*models.Shedule, error) {
+func (s *scheduleService) CreateSchedule(ctx context.Context, req models.ScheduleCreateRequest) (*models.Schedule, error) {
 	if err := s.ValidateScheduleCreate(req); err != nil {
 		return nil, err
 	}
 
-	schedule := &models.Shedule{
+	schedule := &models.Schedule{
 		DoctorID:    req.DoctorID,
 		Date:        req.Date,
 		StartTime:   req.StartTime,
@@ -53,15 +53,15 @@ func (s *scheduleService) CreateSchedule(ctx context.Context, req models.Shedule
 	return schedule, nil
 }
 
-func (s *scheduleService) GetScheduleByID(ctx context.Context, id uint) (*models.Shedule, error) {
+func (s *scheduleService) GetScheduleByID(ctx context.Context, id uint) (*models.Schedule, error) {
 	return s.schedule.GetByDoctorID(id, ctx)
 }
 
-func (s *scheduleService) ListSchedules(ctx context.Context) ([]models.Shedule, error) {
+func (s *scheduleService) ListSchedules(ctx context.Context) ([]models.Schedule, error) {
 	return s.schedule.GetAll(ctx)
 }
 
-func (s *scheduleService) UpdateSchedule(ctx context.Context, id uint, req models.SheduleUpdateRequest) (*models.Shedule, error) {
+func (s *scheduleService) UpdateSchedule(ctx context.Context, id uint, req models.ScheduleUpdateRequest) (*models.Schedule, error) {
 	schedule, err := s.schedule.GetByDoctorID(id, ctx)
 	if err != nil {
 		return nil, err
@@ -82,8 +82,8 @@ func (s *scheduleService) DeleteSchedule(ctx context.Context, id uint) error {
 	return s.schedule.Delete(ctx, id)
 }
 
-func (s *scheduleService) ValidateScheduleCreate(req models.SheduleCreateRequest) error {
-	if req.DoctorID == 0 {
+func (s *scheduleService) ValidateScheduleCreate(req models.ScheduleCreateRequest) error {
+	if req.DoctorID <= 0 {
 		return constants.ErrInvalidDoctorID
 	}
 
@@ -91,14 +91,14 @@ func (s *scheduleService) ValidateScheduleCreate(req models.SheduleCreateRequest
 		return constants.ErrInvalidTimeRange
 	}
 
-	if req.RoomNumber == "" {
+	if req.RoomNumber <= 0 {
 		return constants.ErrInvalidRoomNumber
 	}
 
 	return nil
 }
 
-func (s *scheduleService) ValidateScheduleUpdate(existing *models.Shedule, req models.SheduleUpdateRequest) error {
+func (s *scheduleService) ValidateScheduleUpdate(existing *models.Schedule, req models.ScheduleUpdateRequest) error {
 	if req.DoctorID != nil && *req.DoctorID != 0 {
 		existing.DoctorID = *req.DoctorID
 	}
@@ -111,7 +111,7 @@ func (s *scheduleService) ValidateScheduleUpdate(existing *models.Shedule, req m
 		existing.EndTime = *req.EndTime
 	}
 
-	if req.RoomNumber != nil && *req.RoomNumber != "" {
+	if req.RoomNumber != nil && *req.RoomNumber != 0 {
 		existing.RoomNumber = *req.RoomNumber
 	}
 
