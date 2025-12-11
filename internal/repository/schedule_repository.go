@@ -9,16 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type ScheduleRepositroy interface {
+type ScheduleRepository interface {
 	Create(context.Context, *models.Schedule) error
 
 	GetAll(context.Context) ([]models.Schedule, error)
 
 	GetByDoctorID(uint, context.Context) (*models.Schedule, error)
-
-	GetByDateRange(context.Context, uint, time.Time, time.Time) (*models.Schedule, error)
-
-	CheckConflict(context.Context, uint, time.Time, time.Time) (bool, error)
 
 	Update(context.Context, *models.Schedule) error
 
@@ -33,7 +29,7 @@ type gormScheduleRepository struct {
 	DB *gorm.DB
 }
 
-func NewScheduleRepository(db *gorm.DB) ScheduleRepositroy {
+func NewScheduleRepository(db *gorm.DB) ScheduleRepository {
 	return &gormScheduleRepository{DB: db}
 }
 
@@ -63,30 +59,6 @@ func (r *gormScheduleRepository) GetByDoctorID(id uint, ctx context.Context) (*m
 	}
 
 	return &schedule, nil
-}
-
-func (r *gormScheduleRepository) GetByDateRange(ctx context.Context, doctorID uint, start, end time.Time) (*models.Schedule, error) {
-	var schedule models.Schedule
-
-	if err := r.DB.WithContext(ctx).Where("doctor_id = ? AND date >= ? AND date <= ?", doctorID, start, end).First(&schedule).Error; err != nil {
-		return nil, err
-	}
-
-	return &schedule, nil
-}
-
-func (r *gormScheduleRepository) CheckConflict(ctx context.Context, doctorID uint, start, end time.Time) (bool, error) {
-	var count int64
-
-	err := r.DB.WithContext(ctx).Model(&models.Schedule{}).
-		Where("doctor_id = ? AND ((start_time < ? AND end_time > ?) OR (start_time < ? AND end_time > ?) OR (start_time >= ? AND end_time <= ?))",
-			doctorID, end, end, start, start, start, end).
-		Count(&count).Error
-	if err != nil {
-		return false, err
-	}
-
-	return count > 0, nil
 }
 
 func (r *gormScheduleRepository) Update(ctx context.Context, schedule *models.Schedule) error {

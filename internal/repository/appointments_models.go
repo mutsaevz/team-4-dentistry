@@ -10,7 +10,6 @@ import (
 )
 
 type AppointmentRepository interface {
-
 	Delete(uint) error
 	GetByID(uint) (*models.Appointment, error)
 	Get() ([]models.Appointment, error)

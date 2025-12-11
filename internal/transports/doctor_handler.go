@@ -30,20 +30,25 @@ func NewDoctorHandler(
 }
 
 func (h *DoctorHandler) RegisterRoutes(r *gin.Engine) {
-	doctorGroup := r.Group("/doctors")
+	doctor := r.Group("/doctors")
 
 	{
-		doctorGroup.POST("", h.CreateDoctor)
-		doctorGroup.GET("/:id", h.GetDoctorByID)
-		doctorGroup.GET("", h.ListDoctors)
-		doctorGroup.PATCH("/:id", h.UpdateDoctor)
-		doctorGroup.DELETE("/:id", h.DeleteDoctor)
+		//-----patient------
+		doctor.GET("/:id", h.GetDoctorByID)
+		doctor.GET("", h.ListDoctors)
 
-		doctorGroup.GET("/:id/schedules", h.ListSchedules)
+		doctor.GET("/:id/reviews", h.GetDoctorReviews)
 
-		doctorGroup.GET("/:id/reviews", h.GetDoctorReviews)
+		doctor.GET("/:id/services", h.ListDoctorServices)
 
-		doctorGroup.GET("/:id/services", h.ListDoctorServices)
+		//-----admin------
+		admin := doctor.Group("")
+		admin.Use(RequireRole("admin"))
+
+		admin.POST("", h.CreateDoctor)
+		admin.PATCH("/:id", h.UpdateDoctor)
+		admin.DELETE("/:id", h.DeleteDoctor)
+		admin.GET("/:id/schedules", h.ListSchedules)
 	}
 }
 

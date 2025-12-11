@@ -143,7 +143,6 @@ func (r *appointmentService) Update(id uint, req *models.AppointmentUpdateReques
 		appointments.Price = *req.Price
 	}
 
-
 	if err := r.appointments.Transaction(func(tx *gorm.DB) error {
 		return r.appointments.UpdateTx(tx, appointments)
 	}); err != nil {

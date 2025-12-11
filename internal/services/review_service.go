@@ -91,7 +91,7 @@ func (s *reviewService) DeleteReview(ctx context.Context, id uint) error {
 func (s *reviewService) GetDoctorReviews(ctx context.Context, doctorID uint) ([]models.Review, error) {
 	return s.review.GetByDoctorID(ctx, doctorID)
 }
- 
+
 func (s *reviewService) GetPatientReviews(ctx context.Context, patientID uint) ([]models.Review, error) {
 	return s.review.GetByPatientID(ctx, patientID)
 }

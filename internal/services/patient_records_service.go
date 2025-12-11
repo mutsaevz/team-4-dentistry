@@ -35,7 +35,7 @@ func (s *patientRecord) Create(req *models.PatientRecordCreate) (*models.Patient
 		return nil, constants.Diagnosis_IS_empty
 	}
 
-	if req.DoctorID == 0 {	
+	if req.DoctorID == 0 {
 		return nil, constants.DoctorID_IS_incorrect
 	}
 
@@ -73,14 +73,14 @@ func (s *patientRecord) GetAll() ([]models.PatientRecord, error) {
 	}
 
 	return patientRecords, nil
-}	
+}
 
-func (s *patientRecord) Update(id uint,req *models.PatientRecordUpdate) error {
+func (s *patientRecord) Update(id uint, req *models.PatientRecordUpdate) error {
 	if req == nil {
 		return constants.PatientRecord_IS_nil
 	}
 
-	 patientRecord,err := s.repo.GetID(id)
+	patientRecord, err := s.repo.GetID(id)
 	if err != nil {
 		return err
 	}
@@ -101,7 +101,7 @@ func (s *patientRecord) Update(id uint,req *models.PatientRecordUpdate) error {
 		patientRecord.DoctorID = *req.DoctorID
 	}
 
-	if err := s.repo.Update(patientRecord);  err != nil {
+	if err := s.repo.Update(patientRecord); err != nil {
 		return err
 	}
 
@@ -119,4 +119,3 @@ func (r *patientRecord) Delete(ID uint) error {
 
 	return nil
 }
-

@@ -1,7 +1,6 @@
 package transports
 
 import (
-	
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -124,6 +123,6 @@ func (h *AppointmentsHandler) Delete(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(200, gin.H{"message": "appointment deleted successfully"})
 }

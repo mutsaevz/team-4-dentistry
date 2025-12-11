@@ -88,7 +88,7 @@ func (r *gormDoctorRepository) GetByID(id uint, ctx context.Context) (*models.Do
 
 func (r *gormDoctorRepository) Update(ctx context.Context, doctor *models.Doctor) error {
 	if doctor == nil {
-		return nil
+		return errors.New("")
 	}
 
 	return r.DB.WithContext(ctx).Save(doctor).Error
