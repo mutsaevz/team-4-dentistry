@@ -30,13 +30,11 @@ func (r *gormAppointmentRepository) Create(appointment *models.Appointment) erro
 	}
 
 	dateOnly := time.Date(appointment.StartAt.Year(), appointment.StartAt.Month(), appointment.StartAt.Day(), 0, 0, 0, 0, appointment.StartAt.Location())
-	var schedule models.Shedule
+	var schedule models.Schedule
 	if err := r.DB.Where("doctor_id = ? AND date = ? AND start_time <= ? AND end_time >= ?", appointment.DoctorID, dateOnly, appointment.StartAt, appointment.EndAt).First(&schedule).Error; err != nil {
-		
-			return constants.ErrTimeNotInSchedule
-		}
-	
 
+		return constants.ErrTimeNotInSchedule
+	}
 
 	var count int64
 	if err := r.DB.Model(&models.Appointment{}).
@@ -47,7 +45,6 @@ func (r *gormAppointmentRepository) Create(appointment *models.Appointment) erro
 	if count > 0 {
 		return constants.ErrTimeConflict
 	}
-
 
 	if err := r.DB.Model(&models.Appointment{}).
 		Where("patient_id = ? AND cancelled_at IS NULL AND start_at < ? AND end_at > ?", appointment.PatientID, appointment.EndAt, appointment.StartAt).
@@ -67,13 +64,13 @@ func (r *gormAppointmentRepository) Update(appointment *models.Appointment) erro
 	}
 
 	dateOnly := time.Date(appointment.StartAt.Year(), appointment.StartAt.Month(), appointment.StartAt.Day(), 0, 0, 0, 0, appointment.StartAt.Location())
-	var schedule models.Shedule
+	var schedule models.Schedule
 	if err := r.DB.Where("doctor_id = ? AND date = ? AND start_time <= ? AND end_time >= ?", appointment.DoctorID, dateOnly, appointment.StartAt, appointment.EndAt).First(&schedule).Error; err != nil {
-		
-			return constants.ErrTimeNotInSchedule
-		}
 
-		var count int64
+		return constants.ErrTimeNotInSchedule
+	}
+
+	var count int64
 	if err := r.DB.Model(&models.Appointment{}).
 		Where("doctor_id = ? AND cancelled_at IS NULL AND start_at < ? AND end_at > ?", appointment.DoctorID, appointment.EndAt, appointment.StartAt).
 		Count(&count).Error; err != nil {
@@ -89,7 +86,7 @@ func (r *gormAppointmentRepository) Update(appointment *models.Appointment) erro
 		Count(&count).Error; err != nil {
 		return err
 	}
-	
+
 	if count > 0 {
 		return constants.ErrTimeConflict
 	}

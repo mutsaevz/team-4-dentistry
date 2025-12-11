@@ -82,14 +82,8 @@ func (h *DoctorHandler) GetDoctorByID(c *gin.Context) {
 }
 
 func (h *DoctorHandler) ListDoctors(c *gin.Context) {
-	var queryParams models.DoctorQueryParams
 
-	if err := c.ShouldBindQuery(&queryParams); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	doctors, err := h.doctor.ListDoctors(c.Request.Context(), queryParams)
+	doctors, err := h.doctor.ListDoctors(c.Request.Context(), GetDoctorQueryParams(c))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, "Failed to list doctors")
 		return
@@ -184,11 +178,35 @@ func (h *DoctorHandler) ListDoctorServices(c *gin.Context) {
 		return
 	}
 
-	services, err := h.service.GetDoctorServices(c.Request.Context(), uint(id))
+	services, err := h.doctor.GetDoctorServices(c.Request.Context(), uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, "Failed to list doctor services")
 		return
 	}
 
 	c.JSON(http.StatusOK, services)
+}
+
+func GetDoctorQueryParams(c *gin.Context) models.DoctorQueryParams {
+	specialization := c.Query("specialization")
+	experience := c.Query("experience")
+	avg := c.Query("avg")
+
+	filOr := c.Query("fil_or")
+
+	v, _ := strconv.ParseBool(filOr)
+
+	eID, _ := strconv.Atoi(experience)
+
+	aID, _ := strconv.Atoi(avg)
+
+	params := models.DoctorQueryParams{
+		Specialization:  specialization,
+		ExperienceYears: eID,
+		AvgRating:       float64(aID),
+
+		FilOr: v,
+	}
+
+	return params
 }

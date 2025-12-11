@@ -1,7 +1,6 @@
 package services
 
 import (
-	"context"
 	"errors"
 	"strings"
 
@@ -24,8 +23,6 @@ type ServService interface {
 	UpdateService(id uint, req models.ServiceUpdateRequest) (*models.Service, error)
 
 	DeleteService(id uint) error
-
-	GetDoctorServices(ctx context.Context, doctorID uint) ([]models.Service, error)
 }
 
 type servService struct {
@@ -134,10 +131,6 @@ func (s *servService) DeleteService(id uint) error {
 	}
 
 	return nil
-}
-
-func (s *servService) GetDoctorServices(ctx context.Context, doctorID uint) ([]models.Service, error) {
-	return s.services.GetServicesByDoctorID(ctx, doctorID)
 }
 
 func (s *servService) ValidateCreateServ(req models.ServiceCreateRequest) error {

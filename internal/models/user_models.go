@@ -16,7 +16,7 @@ const (
 	Male   Gender = "male"
 	Female Gender = "female"
 )
-
+                   
 type User struct {
 	Base
 	FirstName     string    `json:"first_name"`
