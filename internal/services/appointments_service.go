@@ -16,6 +16,7 @@ type AppointmentService interface {
 	Delete(id uint) error
 	GetByID(id uint) (*models.Appointment, error)
 	GetAll() ([]models.Appointment, error)
+	GetByPatientID(patientID uint) ([]models.Appointment, error)
 }
 
 type appointmentService struct {
@@ -143,7 +144,6 @@ func (r *appointmentService) Update(id uint, req *models.AppointmentUpdateReques
 		appointments.Price = *req.Price
 	}
 
-
 	if err := r.appointments.Transaction(func(tx *gorm.DB) error {
 		return r.appointments.UpdateTx(tx, appointments)
 	}); err != nil {
@@ -182,6 +182,20 @@ func (r *appointmentService) GetAll() ([]models.Appointment, error) {
 
 	if err != nil {
 		return nil, constants.ErrGetAppointments
+	}
+
+	return appointments, nil
+}
+
+func (r appointmentService) GetByPatientID(patientID uint) ([]models.Appointment, error) {
+
+	if patientID <= 0 {
+		return nil, constants.PatientIDIsIncorrect
+	}
+
+	appointments, err := r.appointments.GetByPatientID(patientID)
+	if err != nil {
+		return nil, err
 	}
 
 	return appointments, nil

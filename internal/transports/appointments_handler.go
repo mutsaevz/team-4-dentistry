@@ -20,13 +20,17 @@ func NewAppointmentsHandler(appointmentService services.AppointmentService) *App
 
 func (h *AppointmentsHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	appointments := rg.Group("/appointments")
-	{
+	
 		appointments.POST("/", h.Create)
 		appointments.GET("/", h.GetAll)
 		appointments.GET("/:id", h.GetByID)
 		appointments.PATCH("/:id", h.Update)
 		appointments.DELETE("/:id", h.Delete)
-	}
+		appointments.GET("/patients/:id",h.GetByPatientID)
+	
+	admin := appointments.Group("")
+	admin.Use(RequireRole("admin"))
+	admin.GET("/", h.GetAll)
 }
 
 func (h *AppointmentsHandler) Create(c *gin.Context) {
@@ -126,4 +130,26 @@ func (h *AppointmentsHandler) Delete(c *gin.Context) {
 	}
 	
 	c.JSON(200, gin.H{"message": "appointment deleted successfully"})
+}
+
+func (h *AppointmentsHandler) GetByPatientID(c *gin.Context){
+	idstr := c.Param("id")
+	id, err := strconv.ParseUint(idstr, 10, 64)
+	if err != nil {
+		c.JSON(400, gin.H{
+			"error": constants.Parse_ID_Error,
+		})
+		return
+	}
+
+	appointments, err := h.service.GetByPatientID(uint(id))
+	if err != nil {
+
+		c.JSON(404, gin.H{
+			"error": constants.PatientIDIsIncorrect,
+		})
+		return
+	}
+
+	c.JSON(200, appointments)
 }
