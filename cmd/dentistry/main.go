@@ -22,10 +22,10 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 	serviceRepo := repository.NewServiceRepository(db)
-	// doctorRepo := repository.NewDoctorRepository(db)
-	// scheduleRepo := repository.NewScheduleRepository(db)
-	// reviewRepo := repository.NewReviewRepository(db)
-	// patientRecordRepo := repository.NewPatientRecordRepo(db)
+	doctorRepo := repository.NewDoctorRepository(db)
+	scheduleRepo := repository.NewScheduleRepository(db)
+	reviewRepo := repository.NewReviewRepository(db)
+	patientRecordRepo := repository.NewPatientRecordRepo(db)
 	recommendationRepo := repository.NewRecommendationRepository(db)
 
 	if err := seed.SeedAdmin(userRepo); err != nil {
@@ -44,11 +44,11 @@ func main() {
 
 	userService := services.NewUserService(userRepo)
 	servService := services.NewServService(serviceRepo)
-	//doctorService := services.NewDoctorService(doctorRepo, serviceRepo)
+	doctorService := services.NewDoctorService(doctorRepo, serviceRepo)
 	authService := services.NewAuthService(userRepo, jwtCfg)
-	//scheduleService := services.NewScheduleService(scheduleRepo, doctorRepo)
-	//reviewService := services.NewReviewService(reviewRepo, doctorRepo, userRepo)
-	//patientRecordService := services.NewPatientRecordService(patientRecordRepo)
+	scheduleService := services.NewScheduleService(scheduleRepo, doctorRepo)
+	reviewService := services.NewReviewService(reviewRepo, doctorRepo, userRepo)
+	patientRecordService := services.NewPatientRecordService(patientRecordRepo)
 	recommendationService := services.NewRecommendationService(
 		recommendationRepo,
 		userRepo,
@@ -68,6 +68,10 @@ func main() {
 		authService,
 		jwtCfg,
 		recommendationService,
+		doctorService,
+		scheduleService,
+		reviewService,
+		patientRecordService,
 	)
 
 	addr := ":8080"
