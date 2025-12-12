@@ -19,7 +19,7 @@ func NewScheduleHandler(schedule services.ScheduleService) *ScheduleHandler {
 	}
 }
 
-func (h *ScheduleHandler) RegisterRoutes(r *gin.Engine) {
+func (h *ScheduleHandler) RegisterRoutes(r *gin.RouterGroup) {
 	s := r.Group("/schedules")
 	{
 		admin := s.Group("")

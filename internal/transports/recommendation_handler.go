@@ -20,7 +20,7 @@ func NewRecommendationHandler(
 	return &RecommendationHandler{service: service}
 }
 
-func (h *RecommendationHandler) RegisterRoutes(c *gin.Engine) {
+func (h *RecommendationHandler) RegisterRoutes(c *gin.RouterGroup) {
 	recs := c.Group("/recommendations")
 
 	recs.POST("")
