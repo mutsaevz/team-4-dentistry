@@ -42,7 +42,7 @@ func main() {
 
 	userService := services.NewUserService(userRepo)
 	servService := services.NewServService(serviceRepo)
-	doctorService := services.NewDoctorService(doctorRepo, serviceRepo)
+	doctorService := services.NewDoctorService(doctorRepo, serviceRepo, scheduleRepo)
 	authService := services.NewAuthService(userRepo, jwtCfg)
 	scheduleService := services.NewScheduleService(scheduleRepo, doctorRepo)
 	reviewService := services.NewReviewService(reviewRepo, doctorRepo, userRepo)
