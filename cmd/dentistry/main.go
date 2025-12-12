@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mutsaevz/team-4-dentistry/internal/config"
+	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
 	"github.com/mutsaevz/team-4-dentistry/internal/seed"
 	"github.com/mutsaevz/team-4-dentistry/internal/services"
@@ -28,6 +29,19 @@ func main() {
 
 	if err := seed.SeedAdmin(userRepo); err != nil {
 		log.Fatalf("Не удалось заполнить административную панель: %v", err)
+	}
+
+	if err := db.AutoMigrate(
+		&models.Appointment{},
+		&models.Doctor{},
+		&models.PatientRecord{},
+		&models.Recommendation{},
+		&models.Review{},
+		&models.Schedule{},
+		&models.Service{},
+		&models.User{},
+	); err != nil {
+		log.Fatal("failed to migrate database", err)
 	}
 
 	secret := os.Getenv("JWT_SECRET")
