@@ -19,16 +19,21 @@ func NewReviewHandler(reviewService services.ReviewService) *ReviewHandler {
 	}
 }
 
-func (h *ReviewHandler) RegisterRoutes(r *gin.Engine) {
+func (h *ReviewHandler) RegisterRoutes(r *gin.RouterGroup) {
 	review := r.Group("/reviews")
 	{
-		review.POST("/", h.CreateReview)
-		review.GET("/:id", h.GetReviewByID)
+		//------user---------
+		review.POST("", h.CreateReview)
 		review.PUT("/:id", h.UpdateReview)
 		review.DELETE("/:id", h.DeleteReview)
 
 		review.GET("/doctor/:doctor_id", h.GetDoctorReviews)
 
+		//-------admin---------
+		admin := review.Group("")
+		admin.Use(RequireRole("admin"))
+
+		review.GET("/:id", h.GetReviewByID)
 		review.GET("/patient/:patient_id", h.GetPatientReviews)
 	}
 }

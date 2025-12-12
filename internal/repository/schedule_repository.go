@@ -9,16 +9,14 @@ import (
 	"gorm.io/gorm"
 )
 
-type ScheduleRepositroy interface {
+type ScheduleRepository interface {
 	Create(context.Context, *models.Schedule) error
 
 	GetAll(context.Context) ([]models.Schedule, error)
 
-	GetByDoctorID(uint, context.Context) (*models.Schedule, error)
+	GetByID(context.Context, uint) (*models.Schedule, error)
 
-	GetByDateRange(context.Context, uint, time.Time, time.Time) (*models.Schedule, error)
-
-	CheckConflict(context.Context, uint, time.Time, time.Time) (bool, error)
+	GetSchedulesByDoctorID(context.Context, uint) ([]models.Schedule, error)
 
 	Update(context.Context, *models.Schedule) error
 
@@ -26,14 +24,14 @@ type ScheduleRepositroy interface {
 
 	DeleteByDoctorID(context.Context, uint) error
 
-	GetAvailableSlots(context.Context, uint) ([]models.Schedule, error)
+	GetAvailableSlots(context.Context, uint, time.Time, time.Time) ([]models.Schedule, error)
 }
 
 type gormScheduleRepository struct {
 	DB *gorm.DB
 }
 
-func NewScheduleRepository(db *gorm.DB) ScheduleRepositroy {
+func NewScheduleRepository(db *gorm.DB) ScheduleRepository {
 	return &gormScheduleRepository{DB: db}
 }
 
@@ -55,38 +53,24 @@ func (r *gormScheduleRepository) GetAll(ctx context.Context) ([]models.Schedule,
 	return schedules, nil
 }
 
-func (r *gormScheduleRepository) GetByDoctorID(id uint, ctx context.Context) (*models.Schedule, error) {
+func (r *gormScheduleRepository) GetByID(ctx context.Context, id uint) (*models.Schedule, error) {
 	var schedule models.Schedule
 
-	if err := r.DB.WithContext(ctx).Where("doctor_id = ?", id).First(&schedule).Error; err != nil {
+	if err := r.DB.WithContext(ctx).First(&schedule, id).Error; err != nil {
 		return nil, err
 	}
 
 	return &schedule, nil
 }
 
-func (r *gormScheduleRepository) GetByDateRange(ctx context.Context, doctorID uint, start, end time.Time) (*models.Schedule, error) {
-	var schedule models.Schedule
+func (r *gormScheduleRepository) GetSchedulesByDoctorID(ctx context.Context, doctorID uint) ([]models.Schedule, error) {
+	var schedule []models.Schedule
 
-	if err := r.DB.WithContext(ctx).Where("doctor_id = ? AND date >= ? AND date <= ?", doctorID, start, end).First(&schedule).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Where("doctor_id = ?", doctorID).Find(&schedule).Error; err != nil {
 		return nil, err
 	}
 
-	return &schedule, nil
-}
-
-func (r *gormScheduleRepository) CheckConflict(ctx context.Context, doctorID uint, start, end time.Time) (bool, error) {
-	var count int64
-
-	err := r.DB.WithContext(ctx).Model(&models.Schedule{}).
-		Where("doctor_id = ? AND ((start_time < ? AND end_time > ?) OR (start_time < ? AND end_time > ?) OR (start_time >= ? AND end_time <= ?))",
-			doctorID, end, end, start, start, start, end).
-		Count(&count).Error
-	if err != nil {
-		return false, err
-	}
-
-	return count > 0, nil
+	return schedule, nil
 }
 
 func (r *gormScheduleRepository) Update(ctx context.Context, schedule *models.Schedule) error {
@@ -105,10 +89,25 @@ func (r *gormScheduleRepository) DeleteByDoctorID(ctx context.Context, doctorID 
 	return r.DB.WithContext(ctx).Where("doctor_id = ?", doctorID).Delete(&models.Schedule{}).Error
 }
 
-func (r *gormScheduleRepository) GetAvailableSlots(ctx context.Context, doctorID uint) ([]models.Schedule, error) {
+func (r *gormScheduleRepository) GetAvailableSlots(
+	ctx context.Context,
+	doctorID uint,
+	start, end time.Time,
+) ([]models.Schedule, error) {
+
+	start = start.Truncate(24 * time.Hour)
+	end = start.AddDate(0, 0, 7)
+
 	var schedules []models.Schedule
 
-	if err := r.DB.WithContext(ctx).Where("doctor_id = ? AND date >= ?", doctorID, time.Now()).Find(&schedules).Error; err != nil {
+	err := r.DB.WithContext(ctx).
+		Where("doctor_id = ?", doctorID).
+		Where("is_available = ?", true).
+		Where("start_time >= ? AND end_time <= ?", start, end).
+		Order("start_time ASC").
+		Find(&schedules).Error
+
+	if err != nil {
 		return nil, err
 	}
 

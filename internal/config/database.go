@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -12,25 +13,32 @@ import (
 
 func SetUpDatabaseConnection(logger *slog.Logger) *gorm.DB {
 	if err := godotenv.Load(); err != nil {
-		panic(err)
+		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	dbUser := os.Getenv("DB_USER")
-	dbPass := os.Getenv("DB_PASS")
 	dbHost := os.Getenv("DB_HOST")
-	dbName := os.Getenv("DB_NAME")
 	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbName := os.Getenv("DB_NAME")
+	dbPass := os.Getenv("DB_PASSWORD")
+	dbSSL := os.Getenv("DB_SSLMODE")
 
-	dsn := fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v", dbHost, dbUser, dbPass, dbName, dbPort)
+	// Формируем DSN
+	dsn := fmt.Sprintf(
+		"host=%v user=%v password=%v dbname=%v port=%v sslmode=%v",
+		dbHost, dbUser, dbPass, dbName, dbPort, dbSSL,
+	)
 
+	// Подключение через GORM
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN:                  dsn,
 		PreferSimpleProtocol: true,
 	}), &gorm.Config{})
 
 	if err != nil {
-		panic(err)
+		log.Fatalf("Failed to initialize database, got error: %v", err)
 	}
 
+	log.Println("✅ Successfully connected to the database")
 	return db
 }

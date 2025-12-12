@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -8,7 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mutsaevz/team-4-dentistry/internal/config"
 	"github.com/mutsaevz/team-4-dentistry/internal/loggers"
+	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
+	"github.com/mutsaevz/team-4-dentistry/internal/seed"
 	"github.com/mutsaevz/team-4-dentistry/internal/services"
 	"github.com/mutsaevz/team-4-dentistry/internal/transports"
 
@@ -21,11 +24,28 @@ func main() {
 
 	userRepo := repository.NewUserRepository(db)
 	serviceRepo := repository.NewServiceRepository(db)
-	// doctorRepo := repository.NewDoctorRepository(db)
-	// scheduleRepo := repository.NewScheduleRepository(db)
-	// reviewRepo := repository.NewReviewRepository(db)
-	// patientRecordRepo := repository.NewPatientRecordRepo(db)
+	doctorRepo := repository.NewDoctorRepository(db)
+	scheduleRepo := repository.NewScheduleRepository(db)
+	reviewRepo := repository.NewReviewRepository(db)
+	patientRecordRepo := repository.NewPatientRecordRepo(db)
 	recommendationRepo := repository.NewRecommendationRepository(db)
+
+	if err := seed.SeedAdmin(userRepo); err != nil {
+		log.Fatalf("Не удалось заполнить административную панель: %v", err)
+	}
+
+	if err := db.AutoMigrate(
+		&models.Appointment{},
+		&models.Doctor{},
+		&models.PatientRecord{},
+		&models.Recommendation{},
+		&models.Review{},
+		&models.Schedule{},
+		&models.Service{},
+		&models.User{},
+	); err != nil {
+		log.Fatal("failed to migrate database", err)
+	}
 
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
@@ -39,11 +59,11 @@ func main() {
 
 	userService := services.NewUserService(userRepo)
 	servService := services.NewServService(serviceRepo)
-	//doctorService := services.NewDoctorService(doctorRepo, serviceRepo)
+	doctorService := services.NewDoctorService(doctorRepo, serviceRepo, scheduleRepo)
 	authService := services.NewAuthService(userRepo, jwtCfg)
-	//scheduleService := services.NewScheduleService(scheduleRepo, doctorRepo)
-	//reviewService := services.NewReviewService(reviewRepo, doctorRepo, userRepo)
-	//patientRecordService := services.NewPatientRecordService(patientRecordRepo)
+	scheduleService := services.NewScheduleService(scheduleRepo, doctorRepo)
+	reviewService := services.NewReviewService(reviewRepo, doctorRepo, userRepo)
+	patientRecordService := services.NewPatientRecordService(patientRecordRepo)
 	recommendationService := services.NewRecommendationService(
 		recommendationRepo,
 		userRepo,
@@ -63,11 +83,15 @@ func main() {
 		authService,
 		jwtCfg,
 		recommendationService,
+		doctorService,
+		scheduleService,
+		reviewService,
+		patientRecordService,
 	)
 
 	addr := ":8080"
 
 	if err := r.Run(addr); err != nil {
-		panic(err)
+		log.Fatalf("ошибка при запуске сервера %s: %v", addr, err)
 	}
 }

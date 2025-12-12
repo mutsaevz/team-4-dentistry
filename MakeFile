@@ -2,7 +2,7 @@
 
 GO           ?= go
 BINARY       ?= dentisry
-CMD_MAIN     := ./cmd/dentisry/main.go
+CMD_MAIN     := ./cmd/dentistry/main.go
 
 run: ## Запуск основного приложения (HTTP-сервер)
 	$(GO) run $(CMD_MAIN)
