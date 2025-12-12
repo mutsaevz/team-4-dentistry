@@ -1,6 +1,7 @@
 package transports
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -11,11 +12,13 @@ import (
 
 type ScheduleHandler struct {
 	schedule services.ScheduleService
+	logger *slog.Logger
 }
 
-func NewScheduleHandler(schedule services.ScheduleService) *ScheduleHandler {
+func NewScheduleHandler(schedule services.ScheduleService, logger *slog.Logger) *ScheduleHandler {
 	return &ScheduleHandler{
 		schedule: schedule,
+		logger: logger,
 	}
 }
 

@@ -1,6 +1,7 @@
 package transports
 
 import (
+	"log/slog"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -11,10 +12,11 @@ import (
 
 type AppointmentsHandler struct {
 	service services.AppointmentService
+	logger *slog.Logger
 }
 
-func NewAppointmentsHandler(appointmentService services.AppointmentService) *AppointmentsHandler {
-	return &AppointmentsHandler{service: appointmentService}
+func NewAppointmentsHandler(appointmentService services.AppointmentService, logger *slog.Logger) *AppointmentsHandler {
+	return &AppointmentsHandler{service: appointmentService, logger: logger}
 }
 
 func (h *AppointmentsHandler) RegisterRoutes(rg *gin.RouterGroup) {

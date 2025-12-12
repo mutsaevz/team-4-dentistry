@@ -1,12 +1,15 @@
 package transports
 
 import (
+	"log/slog"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mutsaevz/team-4-dentistry/internal/services"
 )
 
 func RegisterRoutes(
 	router *gin.Engine,
+	logger *slog.Logger,
 	servService services.ServService,
 	userService services.UserService,
 	authService services.AuthService,
@@ -23,33 +26,33 @@ func RegisterRoutes(
 	api := router.Group("/api")
 
 	// ---AUTH----
-	authHandler := NewAuthHandler(authService, userService)
+	authHandler := NewAuthHandler(authService, userService, logger)
 	authHandler.RegisterRoutes(api, jwtCfg)
 
 	protected := api.Group("")
 	protected.Use(AuthMiddleware(jwtCfg))
 
 	//----USER----
-	userHandler := NewUserHandler(userService)
+	userHandler := NewUserHandler(userService, logger)
 	userHandler.RegisterRoutes(api)
 
 	//----Service----
-	serviceHandler := NewServiceHandler(servService)
+	serviceHandler := NewServiceHandler(servService, logger)
 	serviceHandler.RegisterRoutes(api)
 
 	//----RECOMMENDATION----
-	recHandler := NewRecommendationHandler(recService)
+	recHandler := NewRecommendationHandler(recService, logger)
 	recHandler.RegisterRoutes(api)
 
 	//----SCHEDULE----
-	scheduleHandler := NewScheduleHandler(scheduleService)
+	scheduleHandler := NewScheduleHandler(scheduleService, logger)
 	scheduleHandler.RegisterRoutes(api)
 
 	//----DOCTOR----
-	docHandler := NewDoctorHandler(docService, servService, scheduleService, reviewService)
+	docHandler := NewDoctorHandler(docService, servService, scheduleService, reviewService, logger)
 	docHandler.RegisterRoutes(api)
 
 	//----REVIEW----
-	reviewHandler := NewReviewHandler(reviewService)
+	reviewHandler := NewReviewHandler(reviewService, logger)
 	reviewHandler.RegisterRoutes(api)
 }

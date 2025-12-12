@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log/slog"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
@@ -26,17 +27,20 @@ type recommendationService struct {
 	recRepo     repository.RecommendationRepository
 	userRepo    repository.UserRepository
 	serviceRepo repository.ServiceRepository
+	logger *slog.Logger
 }
 
 func NewRecommendationService(
 	recRepo repository.RecommendationRepository,
 	userRepo repository.UserRepository,
 	serviceRepo repository.ServiceRepository,
+	logger *slog.Logger,
 ) *recommendationService {
 	return &recommendationService{
 		recRepo:     recRepo,
 		userRepo:    userRepo,
 		serviceRepo: serviceRepo,
+		logger: logger,
 	}
 }
 

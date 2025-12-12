@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log/slog"
 	"strings"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
@@ -27,12 +28,14 @@ type ServService interface {
 
 type servService struct {
 	services repository.ServiceRepository
+	logger *slog.Logger
 }
 
 func NewServService(
 	services repository.ServiceRepository,
+	logger *slog.Logger,
 ) ServService {
-	return &servService{services: services}
+	return &servService{services: services,logger: logger}
 }
 
 func (s *servService) CreateService(
