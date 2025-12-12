@@ -2,7 +2,7 @@ package transports
 
 import (
 	"net/http"
-	// "strconv"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
@@ -26,13 +26,10 @@ func (h *ScheduleHandler) RegisterRoutes(r *gin.RouterGroup) {
 		admin.Use(RequireRole("admin"))
 		admin.POST("", h.CreateSchedule)
 		admin.GET("", h.GetSchedules)
-		// admin.GET("/:id", h.GetScheduleByDoctorID)
-		// admin.GET("/:id", h.GetScheduleByID)
-		// admin.PATCH("/:id", h.UpdateSchedule)
-		// admin.DELETE("/:id", h.DeleteSchedule)
+		admin.GET("/:id", h.GetScheduleByDoctorID)
+		admin.PATCH("/:id", h.UpdateSchedule)
+		admin.DELETE("/:id", h.DeleteSchedule)
 	}
-
-	// r.GET("/doctors/:id/schedules/available", h.GetAvailableSlots)
 }
 
 func (h *ScheduleHandler) CreateSchedule(c *gin.Context) {
@@ -63,3 +60,62 @@ func (h *ScheduleHandler) GetSchedules(c *gin.Context) {
 
 	c.JSON(http.StatusOK, schedules)
 }
+
+func (h *ScheduleHandler) GetScheduleByDoctorID(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	schedules, err := h.schedule.GetSchedulesByID(c.Request.Context(), uint(id))
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, schedules)
+}
+
+func (h *ScheduleHandler) UpdateSchedule(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var req models.ScheduleUpdateRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	update, err := h.schedule.UpdateSchedule(c.Request.Context(), uint(id), req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, update)
+}
+
+func (h *ScheduleHandler) DeleteSchedule(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.schedule.DeleteSchedule(c.Request.Context(), uint(id)); err != nil{
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "schedule deleted"})
+}
+
+

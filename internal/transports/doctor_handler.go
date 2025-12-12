@@ -41,6 +41,8 @@ func (h *DoctorHandler) RegisterRoutes(r *gin.RouterGroup) {
 
 		doctor.GET("/:id/services", h.ListDoctorServices)
 
+		doctor.GET("/:id/schedules/available", h.GetAvailableSlots)
+
 		//-----admin------
 		admin := doctor.Group("")
 		admin.Use(RequireRole("admin"))
@@ -165,7 +167,7 @@ func (h *DoctorHandler) ListSchedules(c *gin.Context) {
 		return
 	}
 
-	schedules, err := h.schedule.GetScheduleByID(c.Request.Context(), uint(id))
+	schedules, err := h.schedule.GetSchedulesByID(c.Request.Context(), uint(id))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, "Failed to list schedules")
 		return
@@ -192,6 +194,31 @@ func (h *DoctorHandler) ListDoctorServices(c *gin.Context) {
 	c.JSON(http.StatusOK, services)
 }
 
+func (h *DoctorHandler) GetAvailableSlots(c *gin.Context) {
+	doctorID, err := strconv.Atoi(c.Param("id"))
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	available, err := h.schedule.GetAvailableSlots(c.Request.Context(), uint(doctorID), QueryWeek(c))
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, available)
+}
+
+func QueryWeek(c *gin.Context) int {
+	week := c.Query("week")
+
+	w, _ := strconv.Atoi(week)
+
+	return w
+}
 func GetDoctorQueryParams(c *gin.Context) models.DoctorQueryParams {
 	specialization := c.Query("specialization")
 	experience := c.Query("experience")

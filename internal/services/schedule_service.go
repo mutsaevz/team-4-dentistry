@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
@@ -11,13 +12,15 @@ import (
 type ScheduleService interface {
 	CreateSchedule(ctx context.Context, req models.ScheduleCreateRequest) (*models.Schedule, error)
 
-	GetScheduleByID(ctx context.Context, id uint) (*models.Schedule, error)
+	GetSchedulesByID(ctx context.Context, id uint) ([]models.Schedule, error)
 
 	ListSchedules(ctx context.Context) ([]models.Schedule, error)
 
 	UpdateSchedule(ctx context.Context, id uint, req models.ScheduleUpdateRequest) (*models.Schedule, error)
 
 	DeleteSchedule(ctx context.Context, id uint) error
+
+	GetAvailableSlots(ctx context.Context, doctorID uint, week int) ([]models.Schedule, error)
 }
 
 type scheduleService struct {
@@ -53,8 +56,8 @@ func (s *scheduleService) CreateSchedule(ctx context.Context, req models.Schedul
 	return schedule, nil
 }
 
-func (s *scheduleService) GetScheduleByID(ctx context.Context, id uint) (*models.Schedule, error) {
-	return s.schedule.GetByDoctorID(id, ctx)
+func (s *scheduleService) GetSchedulesByID(ctx context.Context, id uint) ([]models.Schedule, error) {
+	return s.schedule.GetSchedulesByDoctorID(ctx, id)
 }
 
 func (s *scheduleService) ListSchedules(ctx context.Context) ([]models.Schedule, error) {
@@ -62,7 +65,7 @@ func (s *scheduleService) ListSchedules(ctx context.Context) ([]models.Schedule,
 }
 
 func (s *scheduleService) UpdateSchedule(ctx context.Context, id uint, req models.ScheduleUpdateRequest) (*models.Schedule, error) {
-	schedule, err := s.schedule.GetByDoctorID(id, ctx)
+	schedule, err := s.schedule.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -120,4 +123,10 @@ func (s *scheduleService) ValidateScheduleUpdate(existing *models.Schedule, req 
 	}
 
 	return nil
+}
+
+func (s *scheduleService) GetAvailableSlots(ctx context.Context, doctorID uint, week int) ([]models.Schedule, error) {
+	start := time.Now().AddDate(0, 0, 7*week)
+
+	return s.schedule.GetAvailableSlots(ctx, doctorID, start, time.Time{})
 }
