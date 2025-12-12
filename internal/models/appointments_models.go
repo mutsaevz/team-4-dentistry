@@ -16,20 +16,23 @@ type Appointment struct {
 	Price       float64    `json:"price_cents,omitempty"`
 	Paid        bool       `json:"paid" gorm:"default:false"`
 	CancelledAt *time.Time `json:"cancelled_at,omitempty"`
+	IsAvailable bool       `json:"is_available"`
 }
 
 type AppointmentCreateRequest struct {
-	PatientID uint      `json:"patient_id" validate:"required"`
-	DoctorID  uint      `json:"doctor_id" validate:"required"`
-	ServiceID uint      `json:"service_id,omitempty" validate:"omitempty"`
-	StartAt   time.Time `json:"start_at" validate:"required"`
-	Price     float64   `json:"price_cents,omitempty" validate:"omitempty,min=0.0"`
+	PatientID   uint      `json:"patient_id" validate:"required"`
+	DoctorID    uint      `json:"doctor_id" validate:"required"`
+	ServiceID   uint      `json:"service_id,omitempty" validate:"omitempty"`
+	StartAt     time.Time `json:"start_at" validate:"required"`
+	Price       float64   `json:"price_cents,omitempty" validate:"omitempty,min=0.0"`
+	IsAvailable bool      `json:"is_available"`
 }
 
 type AppointmentUpdateRequest struct {
-	PatientID *uint      `json:"patient_id,omitempty" validate:"omitempty"`
-	DoctorID  *uint      `json:"doctor_id,omitempty" validate:"omitempty"`
-	ServiceID *uint      `json:"service_id,omitempty" validate:"omitempty"`
-	StartAt   *time.Time `json:"start_at,omitempty" validate:"omitempty"`
-	Price     *float64   `json:"price_cents,omitempty" validate:"omitempty,min=0.0"`
+	PatientID   *uint      `json:"patient_id,omitempty" validate:"omitempty"`
+	DoctorID    *uint      `json:"doctor_id,omitempty" validate:"omitempty"`
+	ServiceID   *uint      `json:"service_id,omitempty" validate:"omitempty"`
+	StartAt     *time.Time `json:"start_at,omitempty" validate:"omitempty"`
+	Price       *float64   `json:"price_cents,omitempty" validate:"omitempty,min=0.0"`
+	IsAvailable *bool      `json:"is_available"`
 }

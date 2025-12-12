@@ -20,18 +20,26 @@ type DoctorService interface {
 	DeleteDoctor(context.Context, uint) error
 
 	GetDoctorServices(context.Context, uint) ([]models.Service, error)
+
+	GetScheduleByDoctorID(context.Context, uint) ([]models.Schedule, error)
 }
 
 type doctorService struct {
-	doctors repository.DoctorRepository
-	service repository.ServiceRepository
+	doctors  repository.DoctorRepository
+	service  repository.ServiceRepository
+	schedule repository.ScheduleRepository
 }
 
 func NewDoctorService(
 	doctors repository.DoctorRepository,
 	service repository.ServiceRepository,
+	schedule repository.ScheduleRepository,
 ) DoctorService {
-	return &doctorService{doctors: doctors, service: service}
+	return &doctorService{
+		doctors:  doctors,
+		service:  service,
+		schedule: schedule,
+	}
 }
 
 func (s *doctorService) CreateDoctor(ctx context.Context, req models.DoctorCreateRequest) (*models.Doctor, error) {
@@ -66,6 +74,10 @@ func (s *doctorService) ListDoctors(ctx context.Context, params models.DoctorQue
 
 func (s *doctorService) GetDoctorServices(ctx context.Context, doctorID uint) ([]models.Service, error) {
 	return s.service.GetServicesByDoctorID(ctx, doctorID)
+}
+
+func (s *doctorService) GetScheduleByDoctorID(ctx context.Context, doctorID uint) ([]models.Schedule, error) {
+	return s.schedule.GetSchedulesByDoctorID(ctx, doctorID)
 }
 
 func (s *doctorService) UpdateDoctor(ctx context.Context, id uint, req models.DoctorUpdateRequest) (*models.Doctor, error) {

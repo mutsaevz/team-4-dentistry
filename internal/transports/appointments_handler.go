@@ -20,8 +20,7 @@ func NewAppointmentsHandler(appointmentService services.AppointmentService) *App
 func (h *AppointmentsHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	appointments := rg.Group("/appointments")
 	
-		appointments.POST("/", h.Create)
-		appointments.GET("/", h.GetAll)
+		appointments.POST("", h.Create)
 		appointments.GET("/:id", h.GetByID)
 		appointments.PATCH("/:id", h.Update)
 		appointments.DELETE("/:id", h.Delete)
@@ -29,7 +28,7 @@ func (h *AppointmentsHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	
 	admin := appointments.Group("")
 	admin.Use(RequireRole("admin"))
-	admin.GET("/", h.GetAll)
+	admin.GET("", h.GetAll)
 }
 
 func (h *AppointmentsHandler) Create(c *gin.Context) {

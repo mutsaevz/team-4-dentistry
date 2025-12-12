@@ -53,9 +53,23 @@ func (r *appointmentService) Create(req *models.AppointmentCreateRequest) (*mode
 		Price:     req.Price,
 	}
 
-	if err := r.appointments.Transaction(func(tx *gorm.DB) error {
-		return r.appointments.CreateTx(tx, appointment)
-	}); err != nil {
+	err = r.appointments.Transaction(func(tx *gorm.DB) error {
+
+		if err := r.appointments.CreateTx(tx, appointment); err != nil {
+			return err
+		}
+
+		if err := tx.
+			Model(&models.Schedule{}).
+			Where("doctor_id = ? AND start_time = ?", req.DoctorID, req.StartAt).
+			Update("is_available", false).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -137,7 +151,7 @@ func (r *appointmentService) Update(id uint, req *models.AppointmentUpdateReques
 			return err
 		}
 		duration := service.Duration
-		appointments.EndAt = req.StartAt.Add(time.Duration(duration) * time.Minute)
+		appointments.EndAt = appointments.StartAt.Add(time.Duration(duration) * time.Minute)
 	}
 
 	if req.Price != nil {
@@ -187,7 +201,7 @@ func (r *appointmentService) GetAll() ([]models.Appointment, error) {
 	return appointments, nil
 }
 
-func (r appointmentService) GetByPatientID(patientID uint) ([]models.Appointment, error) {
+func (r *appointmentService) GetByPatientID(patientID uint) ([]models.Appointment, error) {
 
 	if patientID <= 0 {
 		return nil, constants.PatientIDIsIncorrect
