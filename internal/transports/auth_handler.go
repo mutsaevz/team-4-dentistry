@@ -21,16 +21,20 @@ func NewAuthHandler(auth services.AuthService, users services.UserService) *Auth
 	}
 }
 
-func (h *AuthHandler) RegisterRoutes(r *gin.Engine) {
+func (h *AuthHandler) RegisterRoutes(r *gin.RouterGroup, jwtCfg services.JWTConfig) {
 	auth := r.Group("/auth")
+	// ----публичные----
 	auth.POST("/register", h.Register)
 	auth.POST("/login", h.Login)
-	auth.POST("/refresh", h.Refresh)
-	auth.POST("/logout", h.Logout)
 
-	auth.GET("/me", h.Me)
-	auth.PUT("/me", h.UpdateMe)
-	auth.PUT("/me/password", h.ChangePassword)
+	// -----нужна-авторизация----
+	protected := auth.Group("")
+	protected.Use(AuthMiddleware(jwtCfg))
+	protected.POST("/refresh", h.Refresh)
+	protected.POST("/logout", h.Logout)
+	protected.GET("/me", h.Me)
+	protected.PUT("/me", h.UpdateMe)
+	protected.PUT("/me/password", h.ChangePassword)
 }
 
 func (h *AuthHandler) Register(c *gin.Context) {

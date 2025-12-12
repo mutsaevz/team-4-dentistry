@@ -17,24 +17,39 @@ func RegisterRoutes(
 	reviewService services.ReviewService,
 	patientRecordService services.PatientRecordService,
 ) {
-	authHandler := NewAuthHandler(authService, userService)
-	serviceHandler := NewServiceHandler(servService)
-	userHandler := NewUserHandler(userService)
-	recHandler := NewRecommendationHandler(recService)
-	docHandler := NewDoctorHandler(docService, servService, scheduleService, reviewService)
-	scheduleHandler := NewScheduleHandler(scheduleService)
-	reviewHandler := NewReviewHandler(reviewService)
+
 	//patientRecordHandler := NewPatientRecordHandler(patientRecordService)
 
-	authHandler.RegisterRoutes(router)
-	recHandler.RegisterRoutes(router)
-	scheduleHandler.RegisterRoutes(router)
-
 	api := router.Group("/api")
-	api.Use(AuthMiddleware(jwtCfg))
 
-	serviceHandler.RegisterRoutes(api)
+	// ---AUTH----
+	authHandler := NewAuthHandler(authService, userService)
+	authHandler.RegisterRoutes(api, jwtCfg)
+
+	protected := api.Group("")
+	protected.Use(AuthMiddleware(jwtCfg))
+
+	//----USER----
+	userHandler := NewUserHandler(userService)
 	userHandler.RegisterRoutes(api)
+
+	//----Service----
+	serviceHandler := NewServiceHandler(servService)
+	serviceHandler.RegisterRoutes(api)
+
+	//----RECOMMENDATION----
+	recHandler := NewRecommendationHandler(recService)
+	recHandler.RegisterRoutes(api)
+
+	//----SCHEDULE----
+	scheduleHandler := NewScheduleHandler(scheduleService)
+	scheduleHandler.RegisterRoutes(api)
+
+	//----DOCTOR----
+	docHandler := NewDoctorHandler(docService, servService, scheduleService, reviewService)
 	docHandler.RegisterRoutes(api)
+
+	//----REVIEW----
+	reviewHandler := NewReviewHandler(reviewService)
 	reviewHandler.RegisterRoutes(api)
 }
