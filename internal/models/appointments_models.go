@@ -15,7 +15,6 @@ type Appointment struct {
 	Status      string     `json:"status" gorm:"type:varchar(50);default:'scheduled'"`
 	Price       float64    `json:"price_cents,omitempty"`
 	Paid        bool       `json:"paid" gorm:"default:false"`
-	CancelledAt *time.Time `json:"cancelled_at,omitempty"`
 	IsAvailable bool       `json:"is_available"`
 }
 

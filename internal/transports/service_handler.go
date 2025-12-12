@@ -2,6 +2,7 @@ package transports
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -12,12 +13,14 @@ import (
 
 type ServiceHandler struct {
 	service services.ServService
+	logger *slog.Logger
 }
 
 func NewServiceHandler(
 	service services.ServService,
+	logger *slog.Logger,
 ) *ServiceHandler {
-	return &ServiceHandler{service: service}
+	return &ServiceHandler{service: service,logger: logger}
 }
 
 func (h *ServiceHandler) RegisterRoutes(r *gin.RouterGroup) {

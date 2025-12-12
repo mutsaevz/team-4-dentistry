@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"log/slog"
+
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"gorm.io/gorm"
@@ -16,10 +18,11 @@ type PatientRecordRepo interface {
 
 type gormPatientRecordRepo struct {
 	DB *gorm.DB
+	logger *slog.Logger
 }
 
-func NewPatientRecordRepo(db *gorm.DB) PatientRecordRepo {
-	return &gormPatientRecordRepo{DB: db}
+func NewPatientRecordRepo(db *gorm.DB, logger *slog.Logger) PatientRecordRepo {
+	return &gormPatientRecordRepo{DB: db, logger: logger}
 }
 
 func (r *gormPatientRecordRepo) Create(patientRecord *models.PatientRecord) error {

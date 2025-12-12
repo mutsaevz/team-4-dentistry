@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
@@ -27,10 +28,11 @@ type DoctorRepository interface {
 
 type gormDoctorRepository struct {
 	DB *gorm.DB
+	logger *slog.Logger
 }
 
-func NewDoctorRepository(db *gorm.DB) DoctorRepository {
-	return &gormDoctorRepository{DB: db}
+func NewDoctorRepository(db *gorm.DB, logger *slog.Logger) DoctorRepository {
+	return &gormDoctorRepository{DB: db, logger: logger}
 }
 
 func (r *gormDoctorRepository) Create(ctx context.Context, doctor *models.Doctor) error {

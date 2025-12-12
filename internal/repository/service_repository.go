@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
@@ -26,10 +27,11 @@ type ServiceRepository interface {
 
 type gormServiceRepository struct {
 	db *gorm.DB
+	logger *slog.Logger
 }
 
-func NewServiceRepository(db *gorm.DB) ServiceRepository {
-	return &gormServiceRepository{db: db}
+func NewServiceRepository(db *gorm.DB, logger *slog.Logger) ServiceRepository {
+	return &gormServiceRepository{db: db, logger: logger}
 }
 
 func (r *gormServiceRepository) Create(service *models.Service) error {

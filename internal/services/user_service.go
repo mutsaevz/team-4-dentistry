@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log/slog"
 	"strings"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
@@ -28,12 +29,14 @@ type UserService interface {
 
 type userService struct {
 	users repository.UserRepository
+	logger *slog.Logger
 }
 
 func NewUserService(
 	users repository.UserRepository,
+	logger *slog.Logger,
 ) UserService {
-	return &userService{users: users}
+	return &userService{users: users,logger: logger}
 }
 
 func hashPassword(plain string) (string, error) {

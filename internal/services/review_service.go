@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
@@ -26,15 +27,18 @@ type reviewService struct {
 	review  repository.ReviewRepository
 	doctor  repository.DoctorRepository
 	patient repository.UserRepository
+	logger *slog.Logger
 }
 
 func NewReviewService(review repository.ReviewRepository,
 	doctor repository.DoctorRepository,
-	patient repository.UserRepository) ReviewService {
+	patient repository.UserRepository,
+	logger *slog.Logger) ReviewService {
 	return &reviewService{
 		review:  review,
 		doctor:  doctor,
 		patient: patient,
+		logger: logger,
 	}
 }
 

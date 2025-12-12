@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
@@ -26,9 +27,10 @@ type ScheduleService interface {
 type scheduleService struct {
 	schedule repository.ScheduleRepository
 	doctor   repository.DoctorRepository
+	logger *slog.Logger
 }
 
-func NewScheduleService(repoSchedule repository.ScheduleRepository, repoDoctor repository.DoctorRepository) ScheduleService {
+func NewScheduleService(repoSchedule repository.ScheduleRepository, repoDoctor repository.DoctorRepository, logger *slog.Logger) ScheduleService {
 	return &scheduleService{
 		schedule: repoSchedule,
 		doctor:   repoDoctor,

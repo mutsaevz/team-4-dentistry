@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
@@ -22,10 +23,11 @@ type AppointmentService interface {
 type appointmentService struct {
 	serviceRepository repository.ServiceRepository
 	appointments      repository.AppointmentRepository
+	logger *slog.Logger
 }
 
-func NewAppointmentService(service repository.ServiceRepository, appointments repository.AppointmentRepository) AppointmentService {
-	return &appointmentService{serviceRepository: service, appointments: appointments}
+func NewAppointmentService(service repository.ServiceRepository, appointments repository.AppointmentRepository, logger *slog.Logger) AppointmentService {
+	return &appointmentService{serviceRepository: service, appointments: appointments, logger: logger}
 }
 
 func (r *appointmentService) Create(req *models.AppointmentCreateRequest) (*models.Appointment, error) {

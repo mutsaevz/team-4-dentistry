@@ -2,6 +2,7 @@ package transports
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,12 +13,14 @@ import (
 type AuthHandler struct {
 	auth  services.AuthService
 	users services.UserService
+	logger *slog.Logger
 }
 
-func NewAuthHandler(auth services.AuthService, users services.UserService) *AuthHandler {
+func NewAuthHandler(auth services.AuthService, users services.UserService, logger *slog.Logger) *AuthHandler {
 	return &AuthHandler{
 		auth:  auth,
 		users: users,
+		logger: logger,
 	}
 }
 

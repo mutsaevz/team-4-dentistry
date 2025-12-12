@@ -1,12 +1,15 @@
 package transports
 
 import (
+	"log/slog"
+
 	"github.com/gin-gonic/gin"
 	"github.com/mutsaevz/team-4-dentistry/internal/services"
 )
 
 func RegisterRoutes(
 	router *gin.Engine,
+	logger *slog.Logger,
 	servService services.ServService,
 	userService services.UserService,
 	authService services.AuthService,
@@ -19,7 +22,8 @@ func RegisterRoutes(
 ) {
 	api := router.Group("/api")
 
-	authHandler := NewAuthHandler(authService, userService)
+	// ---AUTH----
+	authHandler := NewAuthHandler(authService, userService, logger)
 	authHandler.RegisterRoutes(api, jwtCfg)
 
 	// Группа где jwt обязателен
@@ -27,7 +31,7 @@ func RegisterRoutes(
 	protected.Use(AuthMiddleware(jwtCfg))
 
 	// Наши публичные услуги
-	serviceHandler := NewServiceHandler(servService)
+	serviceHandler := NewServiceHandler(servService, logger)
 	servicePublic := api.Group("/services")
 	servicePublic.GET("", serviceHandler.List)
 	servicePublic.GET("/:id", serviceHandler.GetByID)
@@ -41,7 +45,7 @@ func RegisterRoutes(
 
 	// публичные
 
-	docHandler := NewDoctorHandler(docService, servService, scheduleService, reviewService)
+	docHandler := NewDoctorHandler(docService, servService, scheduleService, reviewService, logger)
 	docPublic := api.Group("/doctors")
 	docPublic.GET("", docHandler.ListDoctors)
 	docPublic.GET("/:id", docHandler.GetDoctorByID)
@@ -61,22 +65,22 @@ func RegisterRoutes(
 	// все остальное защищенное, можем потом изменить по желанию
 
 	// Users только admin
-	userHandler := NewUserHandler(userService)
+	userHandler := NewUserHandler(userService, logger)
 	userHandler.RegisterRoutes(protected)
 
 	// Schedules только admin
-	scheduleHandler := NewScheduleHandler(scheduleService)
+	scheduleHandler := NewScheduleHandler(scheduleService, logger)
 	scheduleHandler.RegisterRoutes(protected)
 
 	// Recommendations пациент читает "my", доктор/админ создаёт/удаляет
-	recHandler := NewRecommendationHandler(recService)
+	recHandler := NewRecommendationHandler(recService, logger)
 	recs := protected.Group("/recommendations")
 	recs.POST("", recHandler.Create)
 	recs.GET("/my", recHandler.ListMy)
 	recs.DELETE("/:id", recHandler.Delete)
 
 	// Patient records как минимум админ/доктор
-	patientRecordHandler := NewPatientRecordHandler(patientRecordService)
+	patientRecordHandler := NewPatientRecordHandler(patientRecordService, logger)
 	records := protected.Group("/patient-records")
 	records.Use(RequireRole("admin", "doctor"))
 	records.POST("", patientRecordHandler.Create)
