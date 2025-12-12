@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -9,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetUpDatabaseConnection() *gorm.DB {
+func SetUpDatabaseConnection(logger *slog.Logger) *gorm.DB {
 	if err := godotenv.Load(); err != nil {
 		panic(err)
 	}

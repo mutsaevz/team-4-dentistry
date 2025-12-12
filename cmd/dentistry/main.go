@@ -7,13 +7,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mutsaevz/team-4-dentistry/internal/config"
+	"github.com/mutsaevz/team-4-dentistry/internal/loggers"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
 	"github.com/mutsaevz/team-4-dentistry/internal/services"
 	"github.com/mutsaevz/team-4-dentistry/internal/transports"
+
 )
 
 func main() {
-	db := config.SetUpDatabaseConnection()
+	logger := loggers.InitLogger()
+
+	db := config.SetUpDatabaseConnection(logger)
 
 	userRepo := repository.NewUserRepository(db)
 	serviceRepo := repository.NewServiceRepository(db)
