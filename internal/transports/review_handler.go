@@ -19,7 +19,7 @@ func NewReviewHandler(reviewService services.ReviewService) *ReviewHandler {
 	}
 }
 
-func (h *ReviewHandler) RegisterRoutes(r *gin.Engine) {
+func (h *ReviewHandler) RegisterRoutes(r *gin.RouterGroup) {
 	review := r.Group("/reviews")
 	{
 		//------user---------

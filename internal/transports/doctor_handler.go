@@ -29,7 +29,7 @@ func NewDoctorHandler(
 	}
 }
 
-func (h *DoctorHandler) RegisterRoutes(r *gin.Engine) {
+func (h *DoctorHandler) RegisterRoutes(r *gin.RouterGroup) {
 	doctor := r.Group("/doctors")
 
 	{
