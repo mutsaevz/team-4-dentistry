@@ -14,7 +14,6 @@ import (
 	"github.com/mutsaevz/team-4-dentistry/internal/seed"
 	"github.com/mutsaevz/team-4-dentistry/internal/services"
 	"github.com/mutsaevz/team-4-dentistry/internal/transports"
-
 )
 
 func main() {
@@ -30,10 +29,6 @@ func main() {
 	patientRecordRepo := repository.NewPatientRecordRepo(db)
 	recommendationRepo := repository.NewRecommendationRepository(db)
 
-	if err := seed.SeedAdmin(userRepo); err != nil {
-		log.Fatalf("Не удалось заполнить административную панель: %v", err)
-	}
-
 	if err := db.AutoMigrate(
 		&models.Appointment{},
 		&models.Doctor{},
@@ -45,6 +40,10 @@ func main() {
 		&models.User{},
 	); err != nil {
 		log.Fatal("failed to migrate database", err)
+	}
+
+	if err := seed.SeedAdmin(userRepo); err != nil {
+		log.Fatalf("Не удалось заполнить административную панель: %v", err)
 	}
 
 	secret := os.Getenv("JWT_SECRET")

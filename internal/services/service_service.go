@@ -43,6 +43,7 @@ func (s *servService) CreateService(
 	}
 
 	service := &models.Service{
+		DoctorID:    req.DoctorID,
 		Name:        strings.TrimSpace(req.Name),
 		Description: strings.TrimSpace(req.Description),
 		Category:    strings.TrimSpace(req.Category),
@@ -148,6 +149,10 @@ func (s *servService) ValidateCreateServ(req models.ServiceCreateRequest) error 
 
 	if req.Price < 0 {
 		return errors.New("цена не должна быть отрицательной")
+	}
+
+	if req.DoctorID == 0 {
+		return errors.New("doctor_id обязателен")
 	}
 
 	return nil

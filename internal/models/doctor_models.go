@@ -9,7 +9,7 @@ type Doctor struct {
 	AvgRating       float64  `json:"avg_rating"`
 	RoomNumber      int      `json:"room_number"`
 
-	Services   []Service  `json:"-"`
+	Services  []Service  `json:"-" gorm:"foreignKey:DoctorID"`
 	Schedules []Schedule `json:"-"`
 	Reviews   []Review   `json:"-"`
 }
@@ -27,7 +27,7 @@ type DoctorUpdateRequest struct {
 	Specializations *[]string `json:"specialization,omitempty" validate:"omitempty,max=100"`
 	ExperienceYears *int      `json:"experience_years,omitempty" validate:"omitempty,gte=0"`
 	Bio             *string   `json:"bio,omitempty" validate:"omitempty,max=2000"`
-	RoomNumber      *int       `json:"room_number"`
+	RoomNumber      *int      `json:"room_number"`
 }
 
 type DoctorQueryParams struct {
