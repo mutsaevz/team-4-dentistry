@@ -67,7 +67,7 @@ func (h *DoctorHandler) CreateDoctor(c *gin.Context) {
 
 	doctor, err := h.doctor.CreateDoctor(c.Request.Context(), input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, "Failed to create doctor")
+		c.JSON(http.StatusBadRequest, gin.H{"error":err.Error()})
 		return
 	}
 

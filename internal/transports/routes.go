@@ -20,39 +20,79 @@ func RegisterRoutes(
 	reviewService services.ReviewService,
 	patientRecordService services.PatientRecordService,
 ) {
-
-	//patientRecordHandler := NewPatientRecordHandler(patientRecordService)
-
 	api := router.Group("/api")
 
 	// ---AUTH----
 	authHandler := NewAuthHandler(authService, userService, logger)
 	authHandler.RegisterRoutes(api, jwtCfg)
 
+	// Группа где jwt обязателен
 	protected := api.Group("")
 	protected.Use(AuthMiddleware(jwtCfg))
 
-	//----USER----
-	userHandler := NewUserHandler(userService, logger)
-	userHandler.RegisterRoutes(api)
-
-	//----Service----
+	// Наши публичные услуги
 	serviceHandler := NewServiceHandler(servService, logger)
-	serviceHandler.RegisterRoutes(api)
+	servicePublic := api.Group("/services")
+	servicePublic.GET("", serviceHandler.List)
+	servicePublic.GET("/:id", serviceHandler.GetByID)
 
-	//----RECOMMENDATION----
-	recHandler := NewRecommendationHandler(recService, logger)
-	recHandler.RegisterRoutes(api)
+	// Защищенные
+	serviceAdmin := protected.Group("/services")
+	serviceAdmin.Use(RequireRole("admin"))
+	serviceAdmin.POST("", serviceHandler.Create)
+	serviceAdmin.PUT("/:id", serviceHandler.Update)
+	serviceAdmin.DELETE("/:id", serviceHandler.Delete)
 
-	//----SCHEDULE----
-	scheduleHandler := NewScheduleHandler(scheduleService, logger)
-	scheduleHandler.RegisterRoutes(api)
+	// публичные
 
-	//----DOCTOR----
 	docHandler := NewDoctorHandler(docService, servService, scheduleService, reviewService, logger)
-	docHandler.RegisterRoutes(api)
+	docPublic := api.Group("/doctors")
+	docPublic.GET("", docHandler.ListDoctors)
+	docPublic.GET("/:id", docHandler.GetDoctorByID)
+	docPublic.GET("/:id/reviews", docHandler.GetDoctorReviews)
+	docPublic.GET("/:id/services", docHandler.ListDoctorServices)
+	docPublic.GET("/:id/schedules/available", docHandler.GetAvailableSlots)
 
-	//----REVIEW----
-	reviewHandler := NewReviewHandler(reviewService, logger)
-	reviewHandler.RegisterRoutes(api)
+	// защищенные
+
+	docAdmin := protected.Group("/doctors")
+	docAdmin.Use(RequireRole("admin"))
+	docAdmin.POST("", docHandler.CreateDoctor)
+	docAdmin.PATCH("/:id", docHandler.UpdateDoctor)
+	docAdmin.DELETE("/:id", docHandler.DeleteDoctor)
+	docAdmin.GET("/:id/schedules", docHandler.ListSchedules)
+
+	// все остальное защищенное, можем потом изменить по желанию
+
+	// Users только admin
+	userHandler := NewUserHandler(userService, logger)
+	userHandler.RegisterRoutes(protected)
+
+	// Schedules только admin
+	scheduleHandler := NewScheduleHandler(scheduleService, logger)
+	scheduleHandler.RegisterRoutes(protected)
+
+	// Recommendations пациент читает "my", доктор/админ создаёт/удаляет
+	recHandler := NewRecommendationHandler(recService, logger)
+	recs := protected.Group("/recommendations")
+	recs.POST("", recHandler.Create)
+	recs.GET("/my", recHandler.ListMy)
+	recs.DELETE("/:id", recHandler.Delete)
+
+	// Patient records как минимум админ/доктор
+	patientRecordHandler := NewPatientRecordHandler(patientRecordService, logger)
+	records := protected.Group("/patient-records")
+	records.Use(RequireRole("admin", "doctor"))
+	records.POST("", patientRecordHandler.Create)
+	records.GET("", patientRecordHandler.GetAll)
+	records.GET("/:id", patientRecordHandler.GetByID)
+	records.PATCH("/:id", patientRecordHandler.Update)
+	records.DELETE("/:id", patientRecordHandler.Delete)
+
+	// При код ревью в
+	// Reviews  у нас в handler обнаружились баги с Param("id") vs doctor_id/patient_id,
+	// поэтому лучше пока пользоваться публичным /api/doctors/:id/reviews.
+	// Исправим баг потом
+	// reviewHandler := NewReviewHandler(reviewService)
+	// reviewHandler.RegisterRoutes(protected)
 }
