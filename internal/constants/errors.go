@@ -3,12 +3,12 @@ package constants
 import "errors"
 
 var (
-	Appointments_IS_nil             = errors.New("appointments is nil ")
+	Appointments_IS_nil             = errors.New("структура записи о приёме не задана: передайте непустой объект appointment для создания или обновления записи")
 	PatientRecord_IS_nil            = errors.New("patientRecord is nil ")
 	User_IS_nil                     = errors.New("user is nil")
 	Service_IS_nil                  = errors.New("service is nil")
-	ErrTimeNotInSchedule            = errors.New("выбранное время не входит в расписание врача")
-	ErrTimeConflict                 = errors.New("выбранное время уже занято")
+	ErrTimeNotInSchedule            = errors.New("выбранное время не входит в рабочее расписание врача: проверьте дату и время, или обновите расписание врача перед созданием приёма")
+	ErrTimeConflict                 = errors.New("конфликт времени: выбранный интервал пересекается с существующей записью (у врача или у пациента). Выберите другое время или отмените/перенесите существующий приём")
 	AppointmentCreateRequest_IS_nil = errors.New("appointment create request is nil")
 	DoctorIDIsIncorrect             = errors.New("doctor id is incorrect")
 	PatientIDIsIncorrect            = errors.New("patient id is incorrect")
@@ -27,7 +27,7 @@ var (
 	Parse_ID_Error                  = errors.New("parse id  error")
 	Invalid_JSON_Error              = errors.New("invalid json error")
 	ErrCreateAppointment            = errors.New("error creating appointment")
-	User_appointments_Not_Found     = errors.New("user appointments not found")
+	User_appointments_Not_Found     = errors.New("записи о приёмах для указанного пациента не найдены: проверьте корректность patientID или создайте приёмы для этого пациента")
 )
 
 // Schedule errors
