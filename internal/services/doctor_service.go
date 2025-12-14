@@ -50,7 +50,7 @@ func (s *doctorService) CreateDoctor(ctx context.Context, req models.DoctorCreat
 
 	doctor := &models.Doctor{
 		UserID:          req.UserID,
-		Specializations: append([]string{}, req.Specializations...),
+		Specialization:  req.Specialization,
 		ExperienceYears: req.ExperienceYears,
 		Bio:             req.Bio,
 		AvgRating:       0,
@@ -86,16 +86,17 @@ func (s *doctorService) UpdateDoctor(ctx context.Context, id uint, req models.Do
 		return nil, err
 	}
 
-	if len(*req.Specializations) == 0 {
-		doctor.Specializations = append(doctor.Specializations, *req.Specializations...)
+	if *req.Specialization != "" {
+		doctor.Specialization = *req.Specialization
 	}
-
-	if *req.ExperienceYears != 0 {
+	if req.ExperienceYears != nil {
 		doctor.ExperienceYears = *req.ExperienceYears
 	}
-
-	if err := s.doctors.Update(ctx, doctor); err != nil {
-		return nil, err
+	if req.Bio != nil {
+		doctor.Bio = *req.Bio
+	}
+	if req.RoomNumber != nil {
+		doctor.RoomNumber = *req.RoomNumber
 	}
 
 	return doctor, nil
@@ -109,7 +110,7 @@ func (s *doctorService) ValidateCreateDoctor(req models.DoctorCreateRequest) err
 	if req.UserID <= 0 {
 		return errors.New("")
 	}
-	if len(req.Specializations) == 0 {
+	if req.Specialization == "" {
 		return errors.New("")
 	}
 	if req.RoomNumber <= 0 {

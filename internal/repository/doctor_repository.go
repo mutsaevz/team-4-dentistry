@@ -51,13 +51,13 @@ func (r *gormDoctorRepository) GetAll(params models.DoctorQueryParams, ctx conte
 	}
 
 	if params.FilOr {
-		q = q.Where("specialization ILIKE ? OR experience_years >= ? OR avg_rating >= ?",
+		q = q.Where("specializations ILIKE ? OR experience_years >= ? OR avg_rating >= ?",
 			"%"+params.Specialization+"%",
 			params.ExperienceYears,
 			params.AvgRating)
 	} else {
 		if params.Specialization != "" {
-			q = q.Where("specialization ILIKE ?", "%"+params.Specialization+"%")
+			q = q.Where("specializations ILIKE ?", "%"+params.Specialization+"%")
 		}
 
 		if params.ExperienceYears > 0 {
