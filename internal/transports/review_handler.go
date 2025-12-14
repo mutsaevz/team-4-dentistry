@@ -131,7 +131,7 @@ func (h *ReviewHandler) GetDoctorReviews(c *gin.Context) {
 }
 
 func (h *ReviewHandler) GetPatientReviews(c *gin.Context) {
-	param := c.Param("id")
+	param := c.Param("patient_id")
 	id, err := strconv.Atoi(param)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
