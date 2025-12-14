@@ -30,14 +30,14 @@ func (h *ReviewHandler) RegisterRoutes(r *gin.RouterGroup) {
 		review.PUT("/:id", h.UpdateReview)
 		review.DELETE("/:id", h.DeleteReview)
 
-		review.GET("/doctor/:doctor_id", h.GetDoctorReviews)
+		review.GET("/doctor/:id", h.GetDoctorReviews)
 
 		//-------admin---------
 		admin := review.Group("")
 		admin.Use(RequireRole("admin"))
 
-		review.GET("/:id", h.GetReviewByID)
-		review.GET("/patient/:patient_id", h.GetPatientReviews)
+		admin.GET("/:id", h.GetReviewByID)
+		admin.GET("/patient/:patient_id", h.GetPatientReviews)
 	}
 }
 
