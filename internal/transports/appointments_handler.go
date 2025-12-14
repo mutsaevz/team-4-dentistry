@@ -40,6 +40,7 @@ func (h *AppointmentsHandler) Create(c *gin.Context) {
 		c.JSON(400, gin.H{
 			"error": constants.Invalid_JSON_Error,
 		})
+		return
 	}
 
 	appointment, err := h.service.Create(&req)
@@ -59,6 +60,7 @@ func (h *AppointmentsHandler) GetAll(c *gin.Context) {
 		c.JSON(400, gin.H{
 			"error": constants.ErrGetAppointments,
 		})
+		return
 	}
 
 	c.JSON(200, appointments)

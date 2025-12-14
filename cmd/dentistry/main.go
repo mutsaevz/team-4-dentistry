@@ -28,6 +28,7 @@ func main() {
 	reviewRepo := repository.NewReviewRepository(db, logger)
 	patientRecordRepo := repository.NewPatientRecordRepo(db, logger)
 	recommendationRepo := repository.NewRecommendationRepository(db, logger)
+	appointmentRepo := repository.NewAppointmentRepository(db, logger)
 
 	if err := db.AutoMigrate(
 		&models.Appointment{},
@@ -69,6 +70,7 @@ func main() {
 		serviceRepo,
 		logger,
 	)
+	appointmentService := services.NewAppointmentService(serviceRepo, appointmentRepo, logger)
 
 	r := gin.Default()
 
@@ -88,6 +90,7 @@ func main() {
 		scheduleService,
 		reviewService,
 		patientRecordService,
+		appointmentService,
 	)
 
 	addr := ":8080"

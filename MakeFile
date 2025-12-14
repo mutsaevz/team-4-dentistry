@@ -1,7 +1,7 @@
 .PHONY: run build test fmt vet lint tidy clean dev seed
 
 GO           ?= go
-BINARY       ?= dentisry
+BINARY       ?= dentistry
 CMD_MAIN     := ./cmd/dentistry/main.go
 
 run: ## Запуск основного приложения (HTTP-сервер)
@@ -11,6 +11,7 @@ dev: ## Запуск в режиме разработки с hot reload (air)
 	air -c .air.toml
 
 build: ## Сборка бинарника приложения
+	mkdir -p tmp
 	$(GO) build -o tmp/$(BINARY) $(CMD_MAIN)
 
 test: ## Запуск всех тестов

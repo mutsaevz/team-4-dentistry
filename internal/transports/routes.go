@@ -19,6 +19,7 @@ func RegisterRoutes(
 	scheduleService services.ScheduleService,
 	reviewService services.ReviewService,
 	patientRecordService services.PatientRecordService,
+	appointmentService services.AppointmentService,
 ) {
 	api := router.Group("/api")
 
@@ -64,9 +65,18 @@ func RegisterRoutes(
 
 	// все остальное защищенное, можем потом изменить по желанию
 
-	// Users только admin
+	// Users
 	userHandler := NewUserHandler(userService, logger)
-	userHandler.RegisterRoutes(protected)
+	userPublic := api.Group("/users")
+	userPublic.POST("", userHandler.Create)
+
+	// защищенные
+	userAdmin := protected.Group("/users")
+	userAdmin.Use(RequireRole("admin"))
+	userAdmin.GET("", userHandler.List)
+	userAdmin.GET("/:id", userHandler.GetByID)
+	userAdmin.PUT("/:id", userHandler.Update)
+	userAdmin.DELETE("/:id", userHandler.Delete)
 
 	// Schedules только admin
 	scheduleHandler := NewScheduleHandler(scheduleService, logger)
@@ -89,10 +99,31 @@ func RegisterRoutes(
 	records.PATCH("/:id", patientRecordHandler.Update)
 	records.DELETE("/:id", patientRecordHandler.Delete)
 
-	// При код ревью в
-	// Reviews  у нас в handler обнаружились баги с Param("id") vs doctor_id/patient_id,
-	// поэтому лучше пока пользоваться публичным /api/doctors/:id/reviews.
-	// Исправим баг потом
-	// reviewHandler := NewReviewHandler(reviewService)
-	// reviewHandler.RegisterRoutes(protected)
+	// Review
+	reviewHandler := NewReviewHandler(reviewService, logger)
+	reviewPublic := api.Group("/reviews")
+	reviewPublic.POST("", reviewHandler.CreateReview)
+	reviewPublic.GET("/doctor/:id", reviewHandler.GetDoctorReviews)
+	reviewPublic.PUT("/:id", reviewHandler.UpdateReview)
+	reviewPublic.DELETE("/:id", reviewHandler.DeleteReview)
+
+	// Защищенные review
+	reviewAdmin := protected.Group("/reviews")
+	reviewAdmin.Use(RequireRole("admin"))
+	reviewAdmin.GET("/:id", reviewHandler.GetReviewByID)
+	reviewAdmin.GET("/patient/:patient_id", reviewHandler.GetPatientReviews)
+
+	// Appointment
+	appointmentHandler := NewAppointmentsHandler(appointmentService, logger)
+	apPublic := api.Group("/appointments")
+	apPublic.POST("", appointmentHandler.Create)
+	apPublic.GET("/:id", appointmentHandler.GetByID)
+	apPublic.PATCH("/:id", appointmentHandler.Update)
+	apPublic.DELETE("/:id", appointmentHandler.Delete)
+	apPublic.GET("/patients/:id", appointmentHandler.GetByPatientID)
+
+	// защищенные
+	apAdmin := protected.Group("/appointments")
+	apAdmin.Use(RequireRole("admin"))
+	apAdmin.GET("", appointmentHandler.GetAll)
 }
