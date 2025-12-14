@@ -13,7 +13,7 @@ import (
 
 type RecommendationHandler struct {
 	service services.RecommendationService
-	logger *slog.Logger
+	logger  *slog.Logger
 }
 
 func NewRecommendationHandler(
@@ -51,6 +51,7 @@ func (h *RecommendationHandler) Create(c *gin.Context) {
 	role, okRole := roleVal.(string)
 
 	if !okID || !okRole {
+		h.logger.Error("Некорректные данные токена у Recommendation.Create", "userID_exists", exists, "role_exists", existsRole)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "ошибка в данных токена",
 		})
@@ -58,6 +59,7 @@ func (h *RecommendationHandler) Create(c *gin.Context) {
 	}
 
 	if role != "doctor" && role != "admin" {
+		h.logger.Warn("Попытка создания рекомендации без прав", "user_id", userID, "role", role)
 		c.JSON(http.StatusForbidden, gin.H{
 			"error": "нет прав для создания рекомендаций",
 		})
@@ -67,16 +69,19 @@ func (h *RecommendationHandler) Create(c *gin.Context) {
 	var req models.RecommendationCreateRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn("Ошибка парсинга JSON в Recommendation.Create", "error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "некорректный JSON"})
 		return
 	}
 
 	rec, err := h.service.CreateRec(userID, req)
 	if err != nil {
+		h.logger.Error("Ошибка создания рекомендации", "error", err.Error(), "doctor_id", userID)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	h.logger.Info("Рекомендация создана", "id", rec.ID, "doctor_id", userID)
 	c.JSON(http.StatusCreated, rec)
 }
 
@@ -89,6 +94,7 @@ func (h *RecommendationHandler) ListMy(c *gin.Context) {
 
 	userID, okID := idVal.(uint)
 	if !okID {
+		h.logger.Error("Некорректный userID в Recommendation.ListMy", "exists", exists)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "некорректный userID в контексте",
 		})
@@ -97,10 +103,12 @@ func (h *RecommendationHandler) ListMy(c *gin.Context) {
 
 	recs, err := h.service.ListRecsByPatientID(userID)
 	if err != nil {
+		h.logger.Error("Ошибка получения рекомендаций", "error", err.Error(), "patient_id", userID)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	h.logger.Info("Список рекомендаций получен", "patient_id", userID, "count", len(recs))
 	c.JSON(http.StatusOK, recs)
 }
 
@@ -116,6 +124,7 @@ func (h *RecommendationHandler) Delete(c *gin.Context) {
 
 	role, okRole := roleVal.(string)
 	if !okRole || (role != "doctor" && role != "admin") {
+		h.logger.Warn("Попытка удаления рекомендации без прав", "role", role)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "нет прав на удаление рекомендаций",
 		})
@@ -127,18 +136,22 @@ func (h *RecommendationHandler) Delete(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 
 	if err != nil || id <= 0 {
+		h.logger.Warn("Неверный id в Recommendation.Delete", "param", idStr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "некорректный id"})
 		return
 	}
 
 	if err := h.service.DeleteRec(uint(id)); err != nil {
 		if errors.Is(err, services.ErrRecommendationNotFound) {
+			h.logger.Warn("Recommendation не найден при удалении", "id", id)
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
+		h.logger.Error("Ошибка удаления recommendation", "error", err.Error(), "id", id)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	h.logger.Info("Recommendation удалён", "id", id)
 	c.Status(http.StatusOK)
 }

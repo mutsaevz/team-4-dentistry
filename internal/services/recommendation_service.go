@@ -27,7 +27,7 @@ type recommendationService struct {
 	recRepo     repository.RecommendationRepository
 	userRepo    repository.UserRepository
 	serviceRepo repository.ServiceRepository
-	logger *slog.Logger
+	logger      *slog.Logger
 }
 
 func NewRecommendationService(
@@ -40,7 +40,7 @@ func NewRecommendationService(
 		recRepo:     recRepo,
 		userRepo:    userRepo,
 		serviceRepo: serviceRepo,
-		logger: logger,
+		logger:      logger,
 	}
 }
 
@@ -48,7 +48,9 @@ func (s *recommendationService) CreateRec(
 	doctorID uint,
 	req models.RecommendationCreateRequest,
 ) (*models.Recommendation, error) {
+	s.logger.Debug("CreateRec вызван", "doctor_id", doctorID, "patient_id", req.PatientID, "service_id", req.ServiceID)
 	if err := s.ValidateCreate(req); err != nil {
+		s.logger.Error("валидация CreateRec провалилась", "error", err)
 		return nil, err
 	}
 
@@ -76,24 +78,29 @@ func (s *recommendationService) CreateRec(
 	}
 
 	if err := s.recRepo.Create(rec); err != nil {
+		s.logger.Error("ошибка при создании recommendation", "error", err)
 		return nil, err
 	}
 
+	s.logger.Info("recommendation создан", "id", rec.ID, "doctor_id", doctorID, "patient_id", rec.PatientID)
 	return rec, nil
 }
 
 func (s *recommendationService) ListRecsByPatientID(
 	patientID uint,
 ) ([]models.Recommendation, error) {
-
 	if patientID <= 0 {
 		return nil, ErrInvalidPatiendID
 	}
+	s.logger.Debug("ListRecsByPatientID вызван", "patient_id", patientID)
 
 	recs, err := s.recRepo.ListByPatientID(patientID)
 	if err != nil {
+		s.logger.Error("ошибка при получении рекомендаций по patient_id", "error", err, "patient_id", patientID)
 		return nil, err
 	}
+
+	s.logger.Info("список рекомендаций получен", "patient_id", patientID, "count", len(recs))
 	return recs, nil
 }
 
@@ -101,18 +108,24 @@ func (s *recommendationService) DeleteRec(id uint) error {
 	if id <= 0 {
 		return ErrRecommendationNotFound
 	}
+	s.logger.Debug("DeleteRec вызван", "id", id)
 
 	_, err := s.recRepo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("recommendation не найдена при DeleteRec", "id", id)
 			return ErrRecommendationNotFound
 		}
+		s.logger.Error("ошибка при получении recommendation перед удалением", "error", err, "id", id)
 		return err
 	}
 
 	if err := s.recRepo.Delete(id); err != nil {
+		s.logger.Error("ошибка при удалении recommendation", "error", err, "id", id)
 		return err
 	}
+
+	s.logger.Info("recommendation удален", "id", id)
 	return nil
 }
 
@@ -127,5 +140,6 @@ func (s *recommendationService) ValidateCreate(
 		return ErrInvalidServiceId
 	}
 
+	s.logger.Debug("ValidateCreate успешно", "patient_id", req.PatientID, "service_id", req.ServiceID)
 	return nil
 }

@@ -29,7 +29,7 @@ type ScheduleRepository interface {
 }
 
 type gormScheduleRepository struct {
-	DB *gorm.DB
+	DB     *gorm.DB
 	logger *slog.Logger
 }
 
@@ -39,56 +39,90 @@ func NewScheduleRepository(db *gorm.DB, logger *slog.Logger) ScheduleRepository 
 
 func (r *gormScheduleRepository) Create(ctx context.Context, schedule *models.Schedule) error {
 	if schedule == nil {
+		r.logger.Warn("попытка создать nil schedule")
 		return errors.New("schedule is nil")
 	}
-
-	return r.DB.WithContext(ctx).Create(schedule).Error
+	r.logger.Debug("создание schedule", "doctor_id", schedule.DoctorID, "date", schedule.Date)
+	if err := r.DB.WithContext(ctx).Create(schedule).Error; err != nil {
+		r.logger.Error("ошибка при создании schedule", "error", err)
+		return err
+	}
+	r.logger.Info("schedule создан", "schedule_id", schedule.ID)
+	return nil
 }
 
 func (r *gormScheduleRepository) GetAll(ctx context.Context) ([]models.Schedule, error) {
+	r.logger.Debug("получение всех schedules")
 	var schedules []models.Schedule
 
 	if err := r.DB.WithContext(ctx).Find(&schedules).Error; err != nil {
+		r.logger.Error("ошибка при получении всех schedules", "error", err)
 		return nil, err
 	}
 
+	r.logger.Info("успешное получение всех schedules", "count", len(schedules))
 	return schedules, nil
 }
 
 func (r *gormScheduleRepository) GetByID(ctx context.Context, id uint) (*models.Schedule, error) {
+	r.logger.Debug("получение schedule по ID", "schedule_id", id)
 	var schedule models.Schedule
 
 	if err := r.DB.WithContext(ctx).First(&schedule, id).Error; err != nil {
+		r.logger.Error("ошибка при получении schedule по ID", "error", err, "schedule_id", id)
 		return nil, err
 	}
 
+	r.logger.Info("schedule получен по ID", "schedule_id", id)
 	return &schedule, nil
 }
 
 func (r *gormScheduleRepository) GetSchedulesByDoctorID(ctx context.Context, doctorID uint) ([]models.Schedule, error) {
+	r.logger.Debug("получение schedules по doctorID", "doctor_id", doctorID)
 	var schedule []models.Schedule
 
 	if err := r.DB.WithContext(ctx).Where("doctor_id = ?", doctorID).Find(&schedule).Error; err != nil {
+		r.logger.Error("ошибка при получении schedules по doctorID", "error", err, "doctor_id", doctorID)
 		return nil, err
 	}
 
+	r.logger.Info("schedules получены по doctorID", "doctor_id", doctorID, "count", len(schedule))
 	return schedule, nil
 }
 
 func (r *gormScheduleRepository) Update(ctx context.Context, schedule *models.Schedule) error {
 	if schedule == nil {
+		r.logger.Warn("попытка обновить nil schedule")
 		return nil
 	}
+	r.logger.Debug("обновление schedule", "schedule_id", schedule.ID)
+	if err := r.DB.WithContext(ctx).Save(schedule).Error; err != nil {
+		r.logger.Error("ошибка при обновлении schedule", "error", err, "schedule_id", schedule.ID)
+		return err
+	}
 
-	return r.DB.WithContext(ctx).Save(schedule).Error
+	r.logger.Info("schedule успешно обновлен", "schedule_id", schedule.ID)
+	return nil
 }
 
 func (r *gormScheduleRepository) Delete(ctx context.Context, id uint) error {
-	return r.DB.WithContext(ctx).Delete(&models.Schedule{}, id).Error
+	r.logger.Debug("удаление schedule по ID", "schedule_id", id)
+	if err := r.DB.WithContext(ctx).Delete(&models.Schedule{}, id).Error; err != nil {
+		r.logger.Error("ошибка при удалении schedule", "error", err, "schedule_id", id)
+		return err
+	}
+	r.logger.Info("schedule успешно удален", "schedule_id", id)
+	return nil
 }
 
 func (r *gormScheduleRepository) DeleteByDoctorID(ctx context.Context, doctorID uint) error {
-	return r.DB.WithContext(ctx).Where("doctor_id = ?", doctorID).Delete(&models.Schedule{}).Error
+	r.logger.Debug("удаление schedules по doctorID", "doctor_id", doctorID)
+	if err := r.DB.WithContext(ctx).Where("doctor_id = ?", doctorID).Delete(&models.Schedule{}).Error; err != nil {
+		r.logger.Error("ошибка при удалении schedules по doctorID", "error", err, "doctor_id", doctorID)
+		return err
+	}
+	r.logger.Info("schedules успешно удалены по doctorID", "doctor_id", doctorID)
+	return nil
 }
 
 func (r *gormScheduleRepository) GetAvailableSlots(
@@ -102,6 +136,8 @@ func (r *gormScheduleRepository) GetAvailableSlots(
 
 	var schedules []models.Schedule
 
+	r.logger.Debug("получение доступных слотов", "doctor_id", doctorID, "start", start, "end", end)
+
 	err := r.DB.WithContext(ctx).
 		Where("doctor_id = ?", doctorID).
 		Where("is_available = ?", true).
@@ -110,8 +146,10 @@ func (r *gormScheduleRepository) GetAvailableSlots(
 		Find(&schedules).Error
 
 	if err != nil {
+		r.logger.Error("ошибка при получении доступных слотов", "error", err)
 		return nil, err
 	}
 
+	r.logger.Info("доступные слоты получены", "doctor_id", doctorID, "count", len(schedules))
 	return schedules, nil
 }

@@ -27,18 +27,21 @@ type ScheduleService interface {
 type scheduleService struct {
 	schedule repository.ScheduleRepository
 	doctor   repository.DoctorRepository
-	logger *slog.Logger
+	logger   *slog.Logger
 }
 
 func NewScheduleService(repoSchedule repository.ScheduleRepository, repoDoctor repository.DoctorRepository, logger *slog.Logger) ScheduleService {
 	return &scheduleService{
 		schedule: repoSchedule,
 		doctor:   repoDoctor,
+		logger:   logger,
 	}
 }
 
 func (s *scheduleService) CreateSchedule(ctx context.Context, req models.ScheduleCreateRequest) (*models.Schedule, error) {
+	s.logger.Debug("CreateSchedule вызван", "doctor_id", req.DoctorID, "date", req.Date)
 	if err := s.ValidateScheduleCreate(req); err != nil {
+		s.logger.Error("валидация CreateSchedule провалилась", "error", err)
 		return nil, err
 	}
 
@@ -52,39 +55,66 @@ func (s *scheduleService) CreateSchedule(ctx context.Context, req models.Schedul
 	}
 
 	if err := s.schedule.Create(ctx, schedule); err != nil {
+		s.logger.Error("ошибка при создании schedule", "error", err)
 		return nil, err
 	}
 
+	s.logger.Info("schedule создан", "schedule_id", schedule.ID, "doctor_id", schedule.DoctorID)
 	return schedule, nil
 }
 
 func (s *scheduleService) GetSchedulesByID(ctx context.Context, id uint) ([]models.Schedule, error) {
-	return s.schedule.GetSchedulesByDoctorID(ctx, id)
+	s.logger.Debug("GetSchedulesByID вызван", "doctor_id", id)
+	sch, err := s.schedule.GetSchedulesByDoctorID(ctx, id)
+	if err != nil {
+		s.logger.Error("ошибка при получении расписания по doctor_id", "error", err, "doctor_id", id)
+		return nil, err
+	}
+	s.logger.Info("расписание получено по doctor_id", "doctor_id", id, "count", len(sch))
+	return sch, nil
 }
 
 func (s *scheduleService) ListSchedules(ctx context.Context) ([]models.Schedule, error) {
-	return s.schedule.GetAll(ctx)
+	s.logger.Debug("ListSchedules вызван")
+	sch, err := s.schedule.GetAll(ctx)
+	if err != nil {
+		s.logger.Error("ошибка при получении всех расписаний", "error", err)
+		return nil, err
+	}
+	s.logger.Info("все расписания получены", "count", len(sch))
+	return sch, nil
 }
 
 func (s *scheduleService) UpdateSchedule(ctx context.Context, id uint, req models.ScheduleUpdateRequest) (*models.Schedule, error) {
+	s.logger.Debug("UpdateSchedule вызван", "schedule_id", id)
 	schedule, err := s.schedule.GetByID(ctx, id)
 	if err != nil {
+		s.logger.Error("ошибка при получении schedule для обновления", "error", err, "schedule_id", id)
 		return nil, err
 	}
 
 	if err := s.ValidateScheduleUpdate(schedule, req); err != nil {
+		s.logger.Error("валидация UpdateSchedule провалилась", "error", err, "schedule_id", id)
 		return nil, err
 	}
 
 	if err := s.schedule.Update(ctx, schedule); err != nil {
+		s.logger.Error("ошибка при обновлении schedule", "error", err, "schedule_id", id)
 		return nil, err
 	}
 
+	s.logger.Info("schedule успешно обновлен", "schedule_id", id)
 	return schedule, nil
 }
 
 func (s *scheduleService) DeleteSchedule(ctx context.Context, id uint) error {
-	return s.schedule.Delete(ctx, id)
+	s.logger.Debug("DeleteSchedule вызван", "schedule_id", id)
+	if err := s.schedule.Delete(ctx, id); err != nil {
+		s.logger.Error("ошибка при удалении schedule", "error", err, "schedule_id", id)
+		return err
+	}
+	s.logger.Info("schedule удален", "schedule_id", id)
+	return nil
 }
 
 func (s *scheduleService) ValidateScheduleCreate(req models.ScheduleCreateRequest) error {
@@ -129,6 +159,12 @@ func (s *scheduleService) ValidateScheduleUpdate(existing *models.Schedule, req 
 
 func (s *scheduleService) GetAvailableSlots(ctx context.Context, doctorID uint, week int) ([]models.Schedule, error) {
 	start := time.Now().AddDate(0, 0, 7*week)
-
-	return s.schedule.GetAvailableSlots(ctx, doctorID, start, time.Time{})
+	s.logger.Debug("GetAvailableSlots вызван", "doctor_id", doctorID, "week", week, "start", start)
+	slots, err := s.schedule.GetAvailableSlots(ctx, doctorID, start, time.Time{})
+	if err != nil {
+		s.logger.Error("ошибка при получении доступных слотов", "error", err, "doctor_id", doctorID)
+		return nil, err
+	}
+	s.logger.Info("доступные слоты получены", "doctor_id", doctorID, "count", len(slots))
+	return slots, nil
 }

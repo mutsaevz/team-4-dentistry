@@ -28,20 +28,23 @@ type ServService interface {
 
 type servService struct {
 	services repository.ServiceRepository
-	logger *slog.Logger
+	logger   *slog.Logger
 }
 
 func NewServService(
 	services repository.ServiceRepository,
 	logger *slog.Logger,
 ) ServService {
-	return &servService{services: services,logger: logger}
+	return &servService{services: services, logger: logger}
 }
 
 func (s *servService) CreateService(
 	req models.ServiceCreateRequest,
 ) (*models.Service, error) {
+	s.logger.Debug("CreateService called", "name", req.Name, "doctor_id", req.DoctorID)
+
 	if err := s.ValidateCreateServ(req); err != nil {
+		s.logger.Error("validation failed for CreateService", "error", err)
 		return nil, err
 	}
 
@@ -55,85 +58,102 @@ func (s *servService) CreateService(
 	}
 
 	if err := s.services.Create(service); err != nil {
+		s.logger.Error("failed to create service in repo", "error", err, "name", req.Name)
 		return nil, err
 	}
 
+	s.logger.Info("service created", "service_id", service.ID, "name", service.Name)
 	return service, nil
 }
 
 func (s *servService) GetServiceByID(id uint) (*models.Service, error) {
+	s.logger.Debug("GetServiceByID called", "service_id", id)
 	service, err := s.services.GetByID(id)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("service not found", "service_id", id)
 			return nil, ErrServiceNotfound
 		}
+		s.logger.Error("error getting service by id", "error", err, "service_id", id)
 		return nil, err
 	}
 
+	s.logger.Info("service retrieved", "service_id", id)
 	return service, nil
 }
 
 func (s *servService) ListServices(offset, limit int) ([]models.Service, error) {
+	s.logger.Debug("ListServices called", "offset", offset, "limit", limit)
 	services, err := s.services.List(offset, limit)
-
 	if err != nil {
+		s.logger.Error("error listing services", "error", err)
 		return nil, err
 	}
-
-	return services, err
+	s.logger.Info("services listed", "count", len(services))
+	return services, nil
 }
 
 func (s *servService) ListServicesByCategory(
 	category string,
 	offset,
 	limit int) ([]models.Service, error) {
+	s.logger.Debug("ListServicesByCategory called", "category", category, "offset", offset, "limit", limit)
 	services, err := s.services.ListByCategory(category, offset, limit)
-
 	if err != nil {
+		s.logger.Error("error listing services by category", "error", err, "category", category)
 		return nil, err
 	}
-
+	s.logger.Info("services by category listed", "category", category, "count", len(services))
 	return services, nil
 }
 
 func (s *servService) UpdateService(
 	id uint, req models.ServiceUpdateRequest,
 ) (*models.Service, error) {
+	s.logger.Debug("UpdateService called", "service_id", id)
 	service, err := s.services.GetByID(id)
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("service not found for update", "service_id", id)
 			return nil, ErrServiceNotfound
 		}
+		s.logger.Error("error fetching service for update", "error", err, "service_id", id)
 		return nil, err
 	}
 
 	if err := s.ApplyServUpdate(service, req); err != nil {
+		s.logger.Error("validation failed when applying service update", "error", err, "service_id", id)
 		return nil, err
 	}
 
 	if err := s.services.Update(service); err != nil {
+		s.logger.Error("failed to update service in repo", "error", err, "service_id", id)
 		return nil, err
 	}
 
+	s.logger.Info("service updated", "service_id", id)
 	return service, nil
 }
 
 func (s *servService) DeleteService(id uint) error {
+	s.logger.Debug("DeleteService called", "service_id", id)
 	_, err := s.services.GetByID(id)
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("service not found for delete", "service_id", id)
 			return ErrServiceNotfound
 		}
+		s.logger.Error("error fetching service for delete", "error", err, "service_id", id)
 		return err
 	}
 
 	if err := s.services.Delete(id); err != nil {
+		s.logger.Error("failed to delete service in repo", "error", err, "service_id", id)
 		return err
 	}
 
+	s.logger.Info("service deleted", "service_id", id)
 	return nil
 }
 

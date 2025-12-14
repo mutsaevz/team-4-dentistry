@@ -41,6 +41,7 @@ func (h *UserHandler) Create(c *gin.Context) {
 	var req models.UserCreateRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn("Ошибка разбора JSON в User.Create", "error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "некорректный JSON"})
 		return
 	}
@@ -48,10 +49,12 @@ func (h *UserHandler) Create(c *gin.Context) {
 	user, err := h.service.CreateUser(req)
 
 	if err != nil {
+		h.logger.Error("Ошибка создания пользователя", "error", err.Error(), "email", req.Email)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	h.logger.Info("Пользователь создан", "user_id", user.ID, "email", user.Email)
 	c.JSON(http.StatusCreated, user)
 }
 
@@ -60,6 +63,7 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
+		h.logger.Warn("Неверный id в User.GetByID", "param", idStr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "некорректный id"})
 		return
 	}
@@ -67,13 +71,16 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	user, err := h.service.GetUserById(uint(id))
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
+			h.logger.Warn("Пользователь не найден", "user_id", id)
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
+		h.logger.Error("Ошибка получения пользователя", "error", err.Error(), "user_id", id)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	h.logger.Info("Пользователь получен", "user_id", user.ID)
 	c.JSON(http.StatusOK, user)
 }
 
@@ -84,6 +91,7 @@ func (h *UserHandler) List(c *gin.Context) {
 	offset, err := strconv.Atoi(offsetStr)
 
 	if err != nil || offset < 0 {
+		h.logger.Warn("Неверный offset в User.List", "offset", offsetStr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "некорректный offset"})
 		return
 	}
@@ -91,6 +99,7 @@ func (h *UserHandler) List(c *gin.Context) {
 	limit, err := strconv.Atoi(limitStr)
 
 	if err != nil || limit < 0 {
+		h.logger.Warn("Неверный limit в User.List", "limit", limitStr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "некорректный limit"})
 		return
 	}
@@ -98,10 +107,12 @@ func (h *UserHandler) List(c *gin.Context) {
 	users, err := h.service.ListUsers(offset, limit)
 
 	if err != nil {
+		h.logger.Error("Ошибка списка пользователей", "error", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	h.logger.Info("Список пользователей получен", "count", len(users))
 	c.JSON(http.StatusOK, users)
 }
 
@@ -111,6 +122,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 
 	if err != nil || id <= 0 {
+		h.logger.Warn("Неверный id в User.Update", "param", idStr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "некорректный id"})
 		return
 	}
@@ -118,6 +130,7 @@ func (h *UserHandler) Update(c *gin.Context) {
 	var req models.UserUpdateRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
+		h.logger.Warn("Ошибка парсинга JSON в User.Update", "error", err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"error": "некорректный JSON"})
 		return
 	}
@@ -126,13 +139,16 @@ func (h *UserHandler) Update(c *gin.Context) {
 
 	if err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
+			h.logger.Warn("Пользователь не найден при обновлении", "user_id", id)
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
+		h.logger.Error("Ошибка обновления пользователя", "error", err.Error(), "user_id", id)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	h.logger.Info("Пользователь обновлён", "user_id", user.ID)
 	c.JSON(http.StatusOK, user)
 }
 
@@ -142,18 +158,22 @@ func (h *UserHandler) Delete(c *gin.Context) {
 	id, err := strconv.Atoi(idStr)
 
 	if err != nil || id <= 0 {
+		h.logger.Warn("Неверный id в User.Delete", "param", idStr)
 		c.JSON(http.StatusBadRequest, gin.H{"error": "некорректный id"})
 		return
 	}
 
 	if err := h.service.DeleteUser(uint(id)); err != nil {
 		if errors.Is(err, services.ErrUserNotFound) {
+			h.logger.Warn("Пользователь не найден при удалении", "user_id", id)
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
+		h.logger.Error("Ошибка удаления пользователя", "error", err.Error(), "user_id", id)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	h.logger.Info("Пользователь удалён", "user_id", id)
 	c.Status(http.StatusOK)
 }
