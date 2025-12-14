@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -11,6 +12,7 @@ import (
 type JWTConfig struct {
 	SecretKey      string
 	AccessTokenTTL time.Duration
+	logger *slog.Logger
 }
 
 var ErrInvalidCredentials = errors.New("неправильный email или пароль")
@@ -30,13 +32,15 @@ type AuthService interface {
 type authService struct {
 	userRepo repository.UserRepository
 	jwtCfg   JWTConfig
+	logger *slog.Logger
 }
 
 func NewAuthService(
 	userRepo repository.UserRepository,
 	jwtCfg JWTConfig,
+	logger *slog.Logger,
 ) AuthService {
-	return &authService{userRepo: userRepo, jwtCfg: jwtCfg}
+	return &authService{userRepo: userRepo, jwtCfg: jwtCfg,logger: logger}
 }
 
 func (s *authService) Login(email, password string) (string, error) {

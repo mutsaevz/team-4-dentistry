@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log/slog"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"gorm.io/gorm"
@@ -27,10 +28,11 @@ type ReviewRepository interface {
 
 type gormReviewRepository struct {
 	DB *gorm.DB
+	logger *slog.Logger
 }
 
-func NewReviewRepository(db *gorm.DB) ReviewRepository {
-	return &gormReviewRepository{DB: db}
+func NewReviewRepository(db *gorm.DB, logger *slog.Logger) ReviewRepository {
+	return &gormReviewRepository{DB: db, logger: logger}
 }
 
 func (r *gormReviewRepository) Create(review *models.Review) error {

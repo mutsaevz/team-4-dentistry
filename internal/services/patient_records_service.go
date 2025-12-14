@@ -1,6 +1,8 @@
 package services
 
 import (
+	"log/slog"
+
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
@@ -16,10 +18,11 @@ type PatientRecordService interface {
 
 type patientRecord struct {
 	repo repository.PatientRecordRepo
+	logger *slog.Logger
 }
 
-func NewPatientRecordService(repo repository.PatientRecordRepo) PatientRecordService {
-	return &patientRecord{repo: repo}
+func NewPatientRecordService(repo repository.PatientRecordRepo, logger *slog.Logger) PatientRecordService {
+	return &patientRecord{repo: repo, logger: logger}
 }
 
 func (s *patientRecord) Create(req *models.PatientRecordCreate) (*models.PatientRecord, error) {

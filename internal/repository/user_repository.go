@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"log/slog"
+
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"gorm.io/gorm"
@@ -22,10 +24,11 @@ type UserRepository interface {
 
 type gormUserRepository struct {
 	db *gorm.DB
+	logger *slog.Logger
 }
 
-func NewUserRepository(db *gorm.DB) UserRepository {
-	return &gormUserRepository{db: db}
+func NewUserRepository(db *gorm.DB, logger *slog.Logger) UserRepository {
+	return &gormUserRepository{db: db, logger: logger}
 }
 
 func (r *gormUserRepository) Create(user *models.User) error {

@@ -1,6 +1,7 @@
 package transports
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -14,18 +15,21 @@ type DoctorHandler struct {
 	service  services.ServService
 	schedule services.ScheduleService
 	review   services.ReviewService
+	logger *slog.Logger
 }
 
 func NewDoctorHandler(
 	doctor services.DoctorService,
 	service services.ServService,
 	schedule services.ScheduleService,
-	review services.ReviewService) *DoctorHandler {
+	review services.ReviewService,
+	logger *slog.Logger) *DoctorHandler {
 	return &DoctorHandler{
 		doctor:   doctor,
 		service:  service,
 		schedule: schedule,
 		review:   review,
+		logger: logger,
 	}
 }
 
@@ -63,7 +67,7 @@ func (h *DoctorHandler) CreateDoctor(c *gin.Context) {
 
 	doctor, err := h.doctor.CreateDoctor(c.Request.Context(), input)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, "Failed to create doctor")
+		c.JSON(http.StatusBadRequest, gin.H{"error":err.Error()})
 		return
 	}
 

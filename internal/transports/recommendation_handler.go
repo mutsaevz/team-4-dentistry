@@ -2,6 +2,7 @@ package transports
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -12,22 +13,24 @@ import (
 
 type RecommendationHandler struct {
 	service services.RecommendationService
+	logger *slog.Logger
 }
 
 func NewRecommendationHandler(
 	service services.RecommendationService,
+	logger *slog.Logger,
 ) *RecommendationHandler {
-	return &RecommendationHandler{service: service}
+	return &RecommendationHandler{service: service, logger: logger}
 }
 
 func (h *RecommendationHandler) RegisterRoutes(c *gin.RouterGroup) {
 	recs := c.Group("/recommendations")
 
-	recs.POST("")
+	recs.POST("", h.Create)
 
-	recs.GET("/my")
+	recs.GET("/my", h.ListMy)
 
-	recs.DELETE("/:id")
+	recs.DELETE("/:id", h.Delete)
 }
 
 func (h *RecommendationHandler) Create(c *gin.Context) {

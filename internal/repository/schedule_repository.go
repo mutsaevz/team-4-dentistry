@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
@@ -29,10 +30,11 @@ type ScheduleRepository interface {
 
 type gormScheduleRepository struct {
 	DB *gorm.DB
+	logger *slog.Logger
 }
 
-func NewScheduleRepository(db *gorm.DB) ScheduleRepository {
-	return &gormScheduleRepository{DB: db}
+func NewScheduleRepository(db *gorm.DB, logger *slog.Logger) ScheduleRepository {
+	return &gormScheduleRepository{DB: db, logger: logger}
 }
 
 func (r *gormScheduleRepository) Create(ctx context.Context, schedule *models.Schedule) error {

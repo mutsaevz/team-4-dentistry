@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
@@ -28,17 +29,20 @@ type doctorService struct {
 	doctors  repository.DoctorRepository
 	service  repository.ServiceRepository
 	schedule repository.ScheduleRepository
+	logger *slog.Logger
 }
 
 func NewDoctorService(
 	doctors repository.DoctorRepository,
 	service repository.ServiceRepository,
 	schedule repository.ScheduleRepository,
+	logger *slog.Logger,
 ) DoctorService {
 	return &doctorService{
 		doctors:  doctors,
 		service:  service,
 		schedule: schedule,
+		logger: logger,
 	}
 }
 

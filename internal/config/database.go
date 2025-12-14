@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"log/slog"
 	"log"
 	"os"
 
@@ -10,8 +11,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetUpDatabaseConnection() *gorm.DB {
-	// Загружаем .env
+func SetUpDatabaseConnection(logger *slog.Logger) *gorm.DB {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}

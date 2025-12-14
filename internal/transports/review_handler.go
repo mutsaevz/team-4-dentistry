@@ -1,6 +1,7 @@
 package transports
 
 import (
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -11,11 +12,13 @@ import (
 
 type ReviewHandler struct {
 	review services.ReviewService
+	logger *slog.Logger
 }
 
-func NewReviewHandler(reviewService services.ReviewService) *ReviewHandler {
+func NewReviewHandler(reviewService services.ReviewService, logger *slog.Logger) *ReviewHandler {
 	return &ReviewHandler{
 		review: reviewService,
+		logger: logger,
 	}
 }
 

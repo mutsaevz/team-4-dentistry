@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"log/slog"
+
 	"github.com/mutsaevz/team-4-dentistry/internal/constants"
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"gorm.io/gorm"
@@ -18,9 +20,10 @@ type RecommendationRepository interface {
 
 type gormRecommendationRepository struct {
 	db *gorm.DB
+	logger *slog.Logger
 }
 
-func NewRecommendationRepository(db *gorm.DB) RecommendationRepository {
+func NewRecommendationRepository(db *gorm.DB, logger *slog.Logger) RecommendationRepository {
 	return &gormRecommendationRepository{db: db}
 }
 

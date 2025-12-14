@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"log/slog"
 	"strings"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
@@ -27,12 +28,14 @@ type ServService interface {
 
 type servService struct {
 	services repository.ServiceRepository
+	logger *slog.Logger
 }
 
 func NewServService(
 	services repository.ServiceRepository,
+	logger *slog.Logger,
 ) ServService {
-	return &servService{services: services}
+	return &servService{services: services,logger: logger}
 }
 
 func (s *servService) CreateService(
@@ -43,6 +46,7 @@ func (s *servService) CreateService(
 	}
 
 	service := &models.Service{
+		DoctorID:    req.DoctorID,
 		Name:        strings.TrimSpace(req.Name),
 		Description: strings.TrimSpace(req.Description),
 		Category:    strings.TrimSpace(req.Category),
@@ -148,6 +152,10 @@ func (s *servService) ValidateCreateServ(req models.ServiceCreateRequest) error 
 
 	if req.Price < 0 {
 		return errors.New("цена не должна быть отрицательной")
+	}
+
+	if req.DoctorID == 0 {
+		return errors.New("doctor_id обязателен")
 	}
 
 	return nil
