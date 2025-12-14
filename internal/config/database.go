@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"log/slog"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -13,7 +12,8 @@ import (
 
 func SetUpDatabaseConnection(logger *slog.Logger) *gorm.DB {
 	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		logger.Error("Error loading .env file", "error", err)
+		panic(err)
 	}
 
 	dbHost := os.Getenv("DB_HOST")
@@ -36,9 +36,10 @@ func SetUpDatabaseConnection(logger *slog.Logger) *gorm.DB {
 	}), &gorm.Config{})
 
 	if err != nil {
-		log.Fatalf("Failed to initialize database, got error: %v", err)
+		logger.Error("Failed to initialize database", "error", err)
+		panic(err)
 	}
 
-	log.Println("✅ Successfully connected to the database")
+	logger.Info("Successfully connected to the database")
 	return db
 }

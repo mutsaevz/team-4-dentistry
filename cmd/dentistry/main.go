@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -39,11 +38,13 @@ func main() {
 		&models.Service{},
 		&models.User{},
 	); err != nil {
-		log.Fatal("failed to migrate database", err)
+		logger.Error("failed to migrate database", "error", err)
+		os.Exit(1)
 	}
 
-	if err := seed.SeedAdmin(userRepo); err != nil {
-		log.Fatalf("Не удалось заполнить административную панель: %v", err)
+	if err := seed.SeedAdmin(userRepo, logger); err != nil {
+		logger.Error("Не удалось заполнить административную панель", "error", err)
+		os.Exit(1)
 	}
 
 	secret := os.Getenv("JWT_SECRET")
@@ -93,6 +94,7 @@ func main() {
 	addr := ":8080"
 
 	if err := r.Run(addr); err != nil {
-		log.Fatalf("ошибка при запуске сервера %s: %v", addr, err)
+		logger.Error("ошибка при запуске сервера", "addr", addr, "error", err)
+		os.Exit(1)
 	}
 }

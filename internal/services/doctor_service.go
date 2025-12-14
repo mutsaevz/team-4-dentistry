@@ -29,7 +29,7 @@ type doctorService struct {
 	doctors  repository.DoctorRepository
 	service  repository.ServiceRepository
 	schedule repository.ScheduleRepository
-	logger *slog.Logger
+	logger   *slog.Logger
 }
 
 func NewDoctorService(
@@ -42,13 +42,15 @@ func NewDoctorService(
 		doctors:  doctors,
 		service:  service,
 		schedule: schedule,
-		logger: logger,
+		logger:   logger,
 	}
 }
 
 func (s *doctorService) CreateDoctor(ctx context.Context, req models.DoctorCreateRequest) (*models.Doctor, error) {
+	s.logger.Debug("CreateDoctor вызван", "user_id", req.UserID)
 
 	if err := s.ValidateCreateDoctor(req); err != nil {
+		s.logger.Error("валидация CreateDoctor провалилась", "error", err, "user_id", req.UserID)
 		return nil, err
 	}
 
@@ -62,31 +64,62 @@ func (s *doctorService) CreateDoctor(ctx context.Context, req models.DoctorCreat
 	}
 
 	if err := s.doctors.Create(ctx, doctor); err != nil {
+		s.logger.Error("ошибка при создании врача в репозитории", "error", err, "user_id", req.UserID)
 		return nil, err
 	}
-
+	s.logger.Info("врач создан", "doctor_id", doctor.ID, "user_id", req.UserID)
 	return doctor, nil
 }
 
 func (s *doctorService) GetDoctorByID(ctx context.Context, id uint) (*models.Doctor, error) {
-	return s.doctors.GetByID(id, ctx)
+	s.logger.Debug("получение врача по ID вызвано", "doctor_id", id)
+	doctor, err := s.doctors.GetByID(id, ctx)
+	if err != nil {
+		s.logger.Error("ошибка при получении врача по ID", "error", err, "doctor_id", id)
+		return nil, err
+	}
+	s.logger.Info("врач получен по ID", "doctor_id", id)
+	return doctor, nil
 }
 
 func (s *doctorService) ListDoctors(ctx context.Context, params models.DoctorQueryParams) ([]models.Doctor, error) {
-	return s.doctors.GetAll(params, ctx)
+	s.logger.Debug("получение списка врачей вызвано", "params", params)
+	doctors, err := s.doctors.GetAll(params, ctx)
+	if err != nil {
+		s.logger.Error("ошибка при получении списка врачей", "error", err)
+		return nil, err
+	}
+	s.logger.Info("список врачей получен", "count", len(doctors))
+	return doctors, nil
 }
 
 func (s *doctorService) GetDoctorServices(ctx context.Context, doctorID uint) ([]models.Service, error) {
-	return s.service.GetServicesByDoctorID(ctx, doctorID)
+	s.logger.Debug("получение услуг врача вызвано", "doctor_id", doctorID)
+	svcs, err := s.service.GetServicesByDoctorID(ctx, doctorID)
+	if err != nil {
+		s.logger.Error("ошибка при получении услуг врача", "error", err, "doctor_id", doctorID)
+		return nil, err
+	}
+	s.logger.Info("услуги врача получены", "doctor_id", doctorID, "count", len(svcs))
+	return svcs, nil
 }
 
 func (s *doctorService) GetScheduleByDoctorID(ctx context.Context, doctorID uint) ([]models.Schedule, error) {
-	return s.schedule.GetSchedulesByDoctorID(ctx, doctorID)
+	s.logger.Debug("получение расписания врача вызвано", "doctor_id", doctorID)
+	sch, err := s.schedule.GetSchedulesByDoctorID(ctx, doctorID)
+	if err != nil {
+		s.logger.Error("ошибка при получении расписания врача", "error", err, "doctor_id", doctorID)
+		return nil, err
+	}
+	s.logger.Info("расписание врача получено", "doctor_id", doctorID, "count", len(sch))
+	return sch, nil
 }
 
 func (s *doctorService) UpdateDoctor(ctx context.Context, id uint, req models.DoctorUpdateRequest) (*models.Doctor, error) {
+	s.logger.Debug("обновление врача вызвано", "doctor_id", id)
 	doctor, err := s.doctors.GetByID(id, ctx)
 	if err != nil {
+		s.logger.Error("ошибка при получении врача для обновления", "error", err, "doctor_id", id)
 		return nil, err
 	}
 
@@ -103,11 +136,18 @@ func (s *doctorService) UpdateDoctor(ctx context.Context, id uint, req models.Do
 		doctor.RoomNumber = *req.RoomNumber
 	}
 
+	s.logger.Info("врач обновлён", "doctor_id", id)
 	return doctor, nil
 }
 
 func (s *doctorService) DeleteDoctor(ctx context.Context, id uint) error {
-	return s.doctors.Delete(ctx, id)
+	s.logger.Debug("удаление врача вызвано", "doctor_id", id)
+	if err := s.doctors.Delete(ctx, id); err != nil {
+		s.logger.Error("ошибка при удалении врача", "error", err, "doctor_id", id)
+		return err
+	}
+	s.logger.Info("врач удалён", "doctor_id", id)
+	return nil
 }
 
 func (s *doctorService) ValidateCreateDoctor(req models.DoctorCreateRequest) error {

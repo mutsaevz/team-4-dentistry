@@ -28,7 +28,7 @@ type UserService interface {
 }
 
 type userService struct {
-	users repository.UserRepository
+	users  repository.UserRepository
 	logger *slog.Logger
 }
 
@@ -36,7 +36,7 @@ func NewUserService(
 	users repository.UserRepository,
 	logger *slog.Logger,
 ) UserService {
-	return &userService{users: users,logger: logger}
+	return &userService{users: users, logger: logger}
 }
 
 func hashPassword(plain string) (string, error) {
@@ -56,14 +56,16 @@ func checkPassword(hash, plain string) error {
 func (s *userService) CreateUser(
 	req models.UserCreateRequest,
 ) (*models.User, error) {
+	s.logger.Debug("CreateUser called", "email", req.Email)
 
 	if err := s.ValidateCreateUser(req); err != nil {
+		s.logger.Error("validation failed for CreateUser", "error", err, "email", req.Email)
 		return nil, err
 	}
 
 	hashed, err := hashPassword(req.Password)
-
 	if err != nil {
+		s.logger.Error("failed to hash password", "error", err, "email", req.Email)
 		return nil, err
 	}
 
@@ -77,70 +79,87 @@ func (s *userService) CreateUser(
 	}
 
 	if err := s.users.Create(user); err != nil {
+		s.logger.Error("failed to create user in repo", "error", err, "email", req.Email)
 		return nil, err
 	}
 
+	s.logger.Info("user created", "user_id", user.ID, "email", user.Email)
 	return user, nil
 }
 
 func (s *userService) GetUserById(id uint) (*models.User, error) {
+	s.logger.Debug("GetUserById called", "user_id", id)
 	user, err := s.users.GetByID(id)
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("user not found", "user_id", id)
 			return nil, ErrUserNotFound
 		}
+		s.logger.Error("error getting user by id", "error", err, "user_id", id)
 		return nil, err
 	}
 
+	s.logger.Info("user retrieved", "user_id", id)
 	return user, nil
 }
 
 func (s *userService) ListUsers(offset, limit int) ([]models.User, error) {
+	s.logger.Debug("ListUsers called", "offset", offset, "limit", limit)
 	users, err := s.users.List(offset, limit)
-
 	if err != nil {
+		s.logger.Error("error listing users", "error", err)
 		return nil, err
 	}
-
+	s.logger.Info("users listed", "count", len(users))
 	return users, nil
 }
 
 func (s *userService) UpdateUser(
 	id uint, req models.UserUpdateRequest,
 ) (*models.User, error) {
+	s.logger.Debug("UpdateUser called", "user_id", id)
 	user, err := s.users.GetByID(id)
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("user not found for update", "user_id", id)
 			return nil, ErrUserNotFound
 		}
+		s.logger.Error("error fetching user for update", "error", err, "user_id", id)
 		return nil, err
 	}
 
 	if err := s.ApplyUserUpdate(user, req); err != nil {
+		s.logger.Error("validation failed when applying user update", "error", err, "user_id", id)
 		return nil, err
 	}
 
 	if err := s.users.Update(user); err != nil {
+		s.logger.Error("failed to update user in repo", "error", err, "user_id", id)
 		return nil, err
 	}
 
+	s.logger.Info("user updated", "user_id", id)
 	return user, nil
 }
 
 func (s *userService) DeleteUser(id uint) error {
+	s.logger.Debug("DeleteUser called", "user_id", id)
 	if _, err := s.users.GetByID(id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("user not found for delete", "user_id", id)
 			return ErrUserNotFound
 		}
+		s.logger.Error("error fetching user for delete", "error", err, "user_id", id)
 		return err
 	}
 
 	if err := s.users.Delete(id); err != nil {
+		s.logger.Error("failed to delete user in repo", "error", err, "user_id", id)
 		return err
 	}
 
+	s.logger.Info("user deleted", "user_id", id)
 	return nil
 }
 
@@ -149,32 +168,41 @@ func (s *userService) ChangePassword(
 	oldPassword,
 	newPassword string,
 ) error {
+	s.logger.Debug("ChangePassword called", "user_id", userID)
 	user, err := s.users.GetByID(userID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.logger.Warn("user not found for ChangePassword", "user_id", userID)
 			return ErrUserNotFound
 		}
+		s.logger.Error("error fetching user for ChangePassword", "error", err, "user_id", userID)
 		return err
 	}
+
 	if err := checkPassword(user.Password, oldPassword); err != nil {
+		s.logger.Warn("old password mismatch", "user_id", userID)
 		return errors.New("старый пароль неверен")
 	}
 
 	if strings.TrimSpace(newPassword) == "" {
+		s.logger.Warn("new password is empty", "user_id", userID)
 		return errors.New("новый пароль не должен быть пустым")
 	}
 
 	hashed, err := hashPassword(newPassword)
 	if err != nil {
+		s.logger.Error("failed to hash new password", "error", err, "user_id", userID)
 		return err
 	}
 
 	user.Password = hashed
 
 	if err := s.users.Update(user); err != nil {
+		s.logger.Error("failed to update user password in repo", "error", err, "user_id", userID)
 		return err
 	}
 
+	s.logger.Info("password changed", "user_id", userID)
 	return nil
 }
 

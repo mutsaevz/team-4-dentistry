@@ -1,27 +1,28 @@
 package seed
 
 import (
-	"log"
 	"os"
+
+	"log/slog"
 
 	"github.com/mutsaevz/team-4-dentistry/internal/models"
 	"github.com/mutsaevz/team-4-dentistry/internal/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SeedAdmin(userRepo repository.UserRepository) error {
+func SeedAdmin(userRepo repository.UserRepository, logger *slog.Logger) error {
 	adminEmail := os.Getenv("ADMIN_EMAIL")
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
 
 	if adminEmail == "" || adminPassword == "" {
-		log.Println("[seed admin] ADMIN_EMAIL или ADMIN_PASSWORD не установлены")
+		logger.Info("[seed admin] ADMIN_EMAIL или ADMIN_PASSWORD не установлены")
 		return nil
 	}
 
 	existing, _ := userRepo.GetByEmail(adminEmail)
 
 	if existing != nil {
-		log.Println("[seed admin] админ уже существует — skip")
+		logger.Info("[seed admin] админ уже существует — skip")
 		return nil
 	}
 
@@ -40,7 +41,7 @@ func SeedAdmin(userRepo repository.UserRepository) error {
 		return err
 	}
 
-	log.Printf("[seed admin] админ создан: %s\n", adminEmail)
+	logger.Info("[seed admin] админ создан", "email", adminEmail)
 
 	return nil
 }

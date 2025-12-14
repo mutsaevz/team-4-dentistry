@@ -12,7 +12,7 @@ import (
 type JWTConfig struct {
 	SecretKey      string
 	AccessTokenTTL time.Duration
-	logger *slog.Logger
+	logger         *slog.Logger
 }
 
 var ErrInvalidCredentials = errors.New("неправильный email или пароль")
@@ -32,7 +32,7 @@ type AuthService interface {
 type authService struct {
 	userRepo repository.UserRepository
 	jwtCfg   JWTConfig
-	logger *slog.Logger
+	logger   *slog.Logger
 }
 
 func NewAuthService(
@@ -40,17 +40,20 @@ func NewAuthService(
 	jwtCfg JWTConfig,
 	logger *slog.Logger,
 ) AuthService {
-	return &authService{userRepo: userRepo, jwtCfg: jwtCfg,logger: logger}
+	return &authService{userRepo: userRepo, jwtCfg: jwtCfg, logger: logger}
 }
 
 func (s *authService) Login(email, password string) (string, error) {
-	user, err := s.userRepo.GetByEmail(email)
+	s.logger.Debug("Попытка входа", "email", email)
 
+	user, err := s.userRepo.GetByEmail(email)
 	if err != nil {
+		s.logger.Warn("неверные учетные данные — пользователь не найден", "email", email)
 		return "", ErrInvalidCredentials
 	}
 
 	if err := checkPassword(user.Password, password); err != nil {
+		s.logger.Warn("неверные учетные данные — неверный пароль", "email", email)
 		return "", ErrInvalidCredentials
 	}
 
@@ -67,15 +70,17 @@ func (s *authService) Login(email, password string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	signed, err := token.SignedString([]byte(s.jwtCfg.SecretKey))
-
 	if err != nil {
+		s.logger.Error("ошибка при подписании JWT", "error", err, "user_id", user.ID)
 		return "", err
 	}
 
+	s.logger.Info("пользователь вошёл", "user_id", user.ID, "email", email)
 	return signed, nil
 }
 
 func (s *authService) GenerateToken(userID uint, role string) (string, error) {
+	s.logger.Debug("GenerateToken вызван", "user_id", userID)
 	now := time.Now()
 
 	claims := UserClaims{
@@ -89,5 +94,11 @@ func (s *authService) GenerateToken(userID uint, role string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	return token.SignedString([]byte(s.jwtCfg.SecretKey))
+	signed, err := token.SignedString([]byte(s.jwtCfg.SecretKey))
+	if err != nil {
+		s.logger.Error("ошибка при подписании токена", "error", err, "user_id", userID)
+		return "", err
+	}
+	s.logger.Info("токен сгенерирован", "user_id", userID)
+	return signed, nil
 }
