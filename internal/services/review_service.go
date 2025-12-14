@@ -140,13 +140,13 @@ func (s *reviewService) ValidateCreateReview(req models.ReviewCreateRequest) err
 		return errors.New("")
 	}
 	if req.UserID == 0 {
-		return errors.New("")
+		return errors.New("user_id is required")
 	}
 	if req.DoctorID == 0 {
-		return errors.New("")
+		return errors.New("doctor_id is required")
 	}
 	if req.Rating < 1 || req.Rating > 5 {
-		return errors.New("")
+		return errors.New("rating must be between 1 and 5")
 	}
 	s.logger.Debug("ValidateCreateReview успешно", "appointment_id", req.AppointmentID, "user_id", req.UserID)
 	return nil

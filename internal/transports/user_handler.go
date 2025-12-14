@@ -25,11 +25,11 @@ func NewUserHandler(
 
 func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
 	users := r.Group("/users")
+	users.POST("", h.Create)
 
 	admin := users.Group("")
 	admin.Use(RequireRole("admin"))
 
-	admin.POST("", h.Create)
 	admin.GET("", h.List)
 	admin.GET("/:id", h.GetByID)
 	admin.PUT("/:id", h.Update)

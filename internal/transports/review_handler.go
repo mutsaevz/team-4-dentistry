@@ -143,7 +143,7 @@ func (h *ReviewHandler) GetDoctorReviews(c *gin.Context) {
 }
 
 func (h *ReviewHandler) GetPatientReviews(c *gin.Context) {
-	param := c.Param("id")
+	param := c.Param("patient_id")
 	id, err := strconv.Atoi(param)
 	if err != nil {
 		h.logger.Warn("Неверный ID в Review.GetPatientReviews", "param", param)
