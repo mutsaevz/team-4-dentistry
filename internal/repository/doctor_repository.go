@@ -43,6 +43,7 @@ func (r *gormDoctorRepository) Create(ctx context.Context, doctor *models.Doctor
 
 	if err := r.DB.WithContext(ctx).Create(doctor).Error; err != nil {
 		r.logger.Error("ошибка при создании doctor", "ошибка", err)
+		return err
 	}
 
 	r.logger.Info("doctor успешно создан", "doctor_id", doctor.ID)
@@ -61,13 +62,13 @@ func (r *gormDoctorRepository) GetAll(params models.DoctorQueryParams, ctx conte
 	}
 
 	if params.FilOr {
-		q = q.Where("specializations ILIKE ? OR experience_years >= ? OR avg_rating >= ?",
+		q = q.Where("specialization ILIKE ? OR experience_years >= ? OR avg_rating >= ?",
 			"%"+params.Specialization+"%",
 			params.ExperienceYears,
 			params.AvgRating)
 	} else {
 		if params.Specialization != "" {
-			q = q.Where("specializations ILIKE ?", "%"+params.Specialization+"%")
+			q = q.Where("specialization ILIKE ?", "%"+params.Specialization+"%")
 		}
 
 		if params.ExperienceYears > 0 {
@@ -107,7 +108,7 @@ func (r *gormDoctorRepository) GetByID(id uint, ctx context.Context) (*models.Do
 func (r *gormDoctorRepository) Update(ctx context.Context, doctor *models.Doctor) error {
 	if doctor == nil {
 		r.logger.Warn("doctor равен nil")
-		return errors.New("")
+		return errors.New("doctor is nil")
 	}
 
 	if err := r.DB.WithContext(ctx).Save(doctor).Error; err != nil {

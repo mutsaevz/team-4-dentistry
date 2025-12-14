@@ -9,7 +9,7 @@ type Doctor struct {
 	AvgRating       float64 `json:"avg_rating"`
 	RoomNumber      int     `json:"room_number"`
 
-	Services  []Service  `gorm:"many2many:doctor_services;"`
+	Services  []Service  `json:"services,omitempty"`
 	Schedules []Schedule `json:"-"`
 	Reviews   []Review   `json:"-"`
 }
@@ -31,7 +31,7 @@ type DoctorUpdateRequest struct {
 }
 
 type DoctorQueryParams struct {
-	Specialization string
+	Specialization  string
 	ExperienceYears int
 	AvgRating       float64
 

@@ -64,7 +64,7 @@ func (r *gormReviewRepository) GetByDoctorID(ctx context.Context, doctorID uint)
 func (r *gormReviewRepository) GetByPatientID(ctx context.Context, patient_id uint) ([]models.Review, error) {
 	var reviews []models.Review
 
-	if err := r.DB.WithContext(ctx).Where("id = ?", patient_id).Find(&reviews).Error; err != nil {
+	if err := r.DB.WithContext(ctx).Where("user_id = ?", patient_id).Find(&reviews).Error; err != nil {
 		return nil, err
 	}
 

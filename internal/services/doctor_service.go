@@ -29,7 +29,7 @@ type doctorService struct {
 	doctors  repository.DoctorRepository
 	service  repository.ServiceRepository
 	schedule repository.ScheduleRepository
-	logger *slog.Logger
+	logger   *slog.Logger
 }
 
 func NewDoctorService(
@@ -42,7 +42,7 @@ func NewDoctorService(
 		doctors:  doctors,
 		service:  service,
 		schedule: schedule,
-		logger: logger,
+		logger:   logger,
 	}
 }
 
@@ -90,7 +90,7 @@ func (s *doctorService) UpdateDoctor(ctx context.Context, id uint, req models.Do
 		return nil, err
 	}
 
-	if *req.Specialization != "" {
+	if req.Specialization != nil && *req.Specialization != "" {
 		doctor.Specialization = *req.Specialization
 	}
 	if req.ExperienceYears != nil {
@@ -103,6 +103,10 @@ func (s *doctorService) UpdateDoctor(ctx context.Context, id uint, req models.Do
 		doctor.RoomNumber = *req.RoomNumber
 	}
 
+	if err := s.doctors.Update(ctx, doctor); err != nil {
+		return nil, err
+	}
+
 	return doctor, nil
 }
 
@@ -112,19 +116,19 @@ func (s *doctorService) DeleteDoctor(ctx context.Context, id uint) error {
 
 func (s *doctorService) ValidateCreateDoctor(req models.DoctorCreateRequest) error {
 	if req.UserID <= 0 {
-		return errors.New("")
+		return errors.New("user_id is required")
 	}
 	if req.Specialization == "" {
-		return errors.New("")
+		return errors.New("specialization is required")
 	}
 	if req.RoomNumber <= 0 {
-		return errors.New("")
+		return errors.New("room_number must be > 0")
 	}
 	if req.ExperienceYears < 0 {
-		return errors.New("")
+		return errors.New("experience_years must be >= 0")
 	}
 	if req.Bio == "" {
-		return errors.New("")
+		return errors.New("bio is required")
 	}
 
 	return nil
