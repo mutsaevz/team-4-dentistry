@@ -157,35 +157,64 @@ func (h *AuthHandler) UpdateMe(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+// func (h *AuthHandler) Refresh(c *gin.Context) {
+// 	idVal, exists := c.Get("userID")
+// 	roleVal, existsRole := c.Get("userRole")
+
+// 	if !exists || !existsRole {
+// 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неавторизован"})
+// 		return
+// 	}
+
+// 	userdID, okID := idVal.(uint)
+// 	role, okRole := roleVal.(string)
+
+// 	if !okID || !okRole {
+// 		c.JSON(http.StatusInternalServerError, gin.H{
+// 			"error": "некорректный данные",
+// 		})
+// 		return
+// 	}
+
+// 	token, err := h.auth.GenerateToken(userdID, role)
+
+// 	if err != nil {
+// 		h.logger.Error("Ошибка генерации токена в Auth.Refresh", "error", err.Error(), "user_id", userdID)
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+// 		return
+// 	}
+// 	h.logger.Info("Токен обновлён", "user_id", userdID)
+// 	c.JSON(http.StatusOK, models.LoginResponse{Token: token})
+// }
+
 func (h *AuthHandler) Refresh(c *gin.Context) {
-	idVal, exists := c.Get("userID")
-	roleVal, existsRole := c.Get("userRole")
+  idVal, exists := c.Get("userID")
+  if !exists {
+    c.JSON(http.StatusUnauthorized, gin.H{"error": "Неавторизован"})
+    return
+  }
 
-	if !exists || !existsRole {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неавторизован"})
-		return
-	}
+  userID, ok := idVal.(uint)
+  if !ok {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": "некорректный userID в context"})
+    return
+  }
 
-	userdID, okID := idVal.(uint)
-	role, okRole := roleVal.(string)
+  user, err := h.users.GetUserById(userID) // как в /auth/me
+  if err != nil {
+    c.JSON(http.StatusUnauthorized, gin.H{"error": "Пользователь не найден"})
+    return
+  }
 
-	if !okID || !okRole {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "некорректный данные",
-		})
-		return
-	}
+  token, err := h.auth.GenerateToken(userID, string(user.Role))
+  if err != nil {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+    return
+  }
 
-	token, err := h.auth.GenerateToken(userdID, role)
-
-	if err != nil {
-		h.logger.Error("Ошибка генерации токена в Auth.Refresh", "error", err.Error(), "user_id", userdID)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	h.logger.Info("Токен обновлён", "user_id", userdID)
-	c.JSON(http.StatusOK, models.LoginResponse{Token: token})
+  c.JSON(http.StatusOK, models.LoginResponse{Token: token})
 }
+
 
 func (h *AuthHandler) Logout(c *gin.Context) {
 	c.Status(http.StatusOK)
