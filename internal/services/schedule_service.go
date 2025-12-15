@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type ScheduleService interface {
-	CreateSchedule(ctx context.Context, req models.ScheduleCreateRequest) (*models.Schedule, error)
+	CreateSchedule(ctx context.Context, req []models.ScheduleCreateRequest) ([]models.Schedule, error)
 
 	GetSchedulesByID(ctx context.Context, id uint) ([]models.Schedule, error)
 
@@ -38,29 +39,53 @@ func NewScheduleService(repoSchedule repository.ScheduleRepository, repoDoctor r
 	}
 }
 
-func (s *scheduleService) CreateSchedule(ctx context.Context, req models.ScheduleCreateRequest) (*models.Schedule, error) {
-	s.logger.Debug("CreateSchedule вызван", "doctor_id", req.DoctorID, "date", req.Date)
+func (s *scheduleService) CreateSchedule(
+	ctx context.Context,
+	req []models.ScheduleCreateRequest,
+) ([]models.Schedule, error) {
+
+	if len(req) == 0 {
+		return nil, errors.New("empty schedule request")
+	}
+
+	first := req[0]
+
+	s.logger.Debug(
+		"CreateSchedule вызван",
+		"doctor_id", first.DoctorID,
+		"count", len(req),
+	)
+
 	if err := s.ValidateScheduleCreate(req); err != nil {
 		s.logger.Error("валидация CreateSchedule провалилась", "error", err)
 		return nil, err
 	}
 
-	schedule := &models.Schedule{
-		DoctorID:    req.DoctorID,
-		Date:        req.Date,
-		StartTime:   req.StartTime,
-		EndTime:     req.EndTime,
-		RoomNumber:  req.RoomNumber,
-		IsAvailable: true,
+	schedules := make([]models.Schedule, 0, len(req))
+
+	for _, r := range req {
+		schedules = append(schedules, models.Schedule{
+			DoctorID:    r.DoctorID,
+			Date:        r.Date,
+			StartTime:   r.StartTime,
+			EndTime:     r.EndTime,
+			RoomNumber:  r.RoomNumber,
+			IsAvailable: true,
+		})
 	}
 
-	if err := s.schedule.Create(ctx, schedule); err != nil {
-		s.logger.Error("ошибка при создании schedule", "error", err)
+	if err := s.schedule.Create(ctx, schedules); err != nil {
+		s.logger.Error("ошибка при создании schedules", "error", err)
 		return nil, err
 	}
 
-	s.logger.Info("schedule создан", "schedule_id", schedule.ID, "doctor_id", schedule.DoctorID)
-	return schedule, nil
+	s.logger.Info(
+		"schedules созданы",
+		"doctor_id", first.DoctorID,
+		"count", len(schedules),
+	)
+
+	return schedules, nil
 }
 
 func (s *scheduleService) GetSchedulesByID(ctx context.Context, id uint) ([]models.Schedule, error) {
@@ -117,17 +142,22 @@ func (s *scheduleService) DeleteSchedule(ctx context.Context, id uint) error {
 	return nil
 }
 
-func (s *scheduleService) ValidateScheduleCreate(req models.ScheduleCreateRequest) error {
-	if req.DoctorID <= 0 {
-		return constants.ErrInvalidDoctorID
-	}
+func (s *scheduleService) ValidateScheduleCreate(
+	req []models.ScheduleCreateRequest,
+) error {
 
-	if req.StartTime.After(req.EndTime) || req.StartTime.Equal(req.EndTime) {
-		return constants.ErrInvalidTimeRange
-	}
+	for _, r := range req {
+		if r.DoctorID <= 0 {
+			return constants.ErrInvalidDoctorID
+		}
 
-	if req.RoomNumber <= 0 {
-		return constants.ErrInvalidRoomNumber
+		if !r.StartTime.Before(r.EndTime) {
+			return constants.ErrInvalidTimeRange
+		}
+
+		if r.RoomNumber <= 0 {
+			return constants.ErrInvalidRoomNumber
+		}
 	}
 
 	return nil

@@ -36,7 +36,7 @@ func (h *ScheduleHandler) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (h *ScheduleHandler) CreateSchedule(c *gin.Context) {
-	var req models.ScheduleCreateRequest
+	var req []models.ScheduleCreateRequest
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn("Ошибка разбора тела запроса (CreateSchedule)", "error", err.Error())
@@ -44,7 +44,7 @@ func (h *ScheduleHandler) CreateSchedule(c *gin.Context) {
 		return
 	}
 
-	h.logger.Debug("Запрос на создание расписания", "doctor_id", req.DoctorID, "date", req.Date)
+	h.logger.Debug("Запрос на создание расписания", "doctor_id", req[0].DoctorID, "date", req[0].Date)
 
 	schedule, err := h.schedule.CreateSchedule(c.Request.Context(), req)
 	if err != nil {
@@ -53,7 +53,7 @@ func (h *ScheduleHandler) CreateSchedule(c *gin.Context) {
 		return
 	}
 
-	h.logger.Info("Создано расписание", "schedule_id", schedule.ID, "doctor_id", schedule.DoctorID)
+	h.logger.Info("Создано расписание", "schedule_id", schedule[0].ID, "doctor_id", schedule[0].DoctorID)
 	c.JSON(http.StatusCreated, schedule)
 }
 
