@@ -67,16 +67,7 @@ func RegisterRoutes(
 
 	// Users
 	userHandler := NewUserHandler(userService, logger)
-	userPublic := api.Group("/users")
-	userPublic.POST("", userHandler.Create)
-
-	// защищенные
-	userAdmin := protected.Group("/users")
-	userAdmin.Use(RequireRole("admin"))
-	userAdmin.GET("", userHandler.List)
-	userAdmin.GET("/:id", userHandler.GetByID)
-	userAdmin.PUT("/:id", userHandler.Update)
-	userAdmin.DELETE("/:id", userHandler.Delete)
+	userHandler.RegisterRoutes(protected)
 
 	// Schedules только admin
 	scheduleHandler := NewScheduleHandler(scheduleService, logger)
