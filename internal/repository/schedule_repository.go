@@ -11,7 +11,7 @@ import (
 )
 
 type ScheduleRepository interface {
-	Create(context.Context, *models.Schedule) error
+	Create(context.Context, []models.Schedule) error
 
 	GetAll(context.Context) ([]models.Schedule, error)
 
@@ -37,19 +37,38 @@ func NewScheduleRepository(db *gorm.DB, logger *slog.Logger) ScheduleRepository 
 	return &gormScheduleRepository{DB: db, logger: logger}
 }
 
-func (r *gormScheduleRepository) Create(ctx context.Context, schedule *models.Schedule) error {
-	if schedule == nil {
-		r.logger.Warn("попытка создать nil schedule")
-		return errors.New("schedule is nil")
+func (r *gormScheduleRepository) Create(
+	ctx context.Context,
+	schedules []models.Schedule,
+) error {
+
+	if len(schedules) == 0 {
+		r.logger.Warn("попытка создать пустой список schedules")
+		return errors.New("schedules slice is empty")
 	}
-	r.logger.Debug("создание schedule", "doctor_id", schedule.DoctorID, "date", schedule.Date)
-	if err := r.DB.WithContext(ctx).Create(schedule).Error; err != nil {
-		r.logger.Error("ошибка при создании schedule", "error", err)
+
+	first := schedules[0]
+
+	r.logger.Debug(
+		"создание schedules",
+		"count", len(schedules),
+		"doctor_id", first.DoctorID,
+		"from", first.Date,
+	)
+
+	if err := r.DB.WithContext(ctx).Create(&schedules).Error; err != nil {
+		r.logger.Error("ошибка при создании schedules", "error", err)
 		return err
 	}
-	r.logger.Info("schedule создан", "schedule_id", schedule.ID)
+
+	r.logger.Info(
+		"schedules успешно созданы",
+		"count", len(schedules),
+	)
+
 	return nil
 }
+
 
 func (r *gormScheduleRepository) GetAll(ctx context.Context) ([]models.Schedule, error) {
 	r.logger.Debug("получение всех schedules")
