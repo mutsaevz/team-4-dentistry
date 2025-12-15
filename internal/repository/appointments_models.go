@@ -100,7 +100,7 @@ func (r *gormAppointmentRepository) CreateTx(tx *gorm.DB, appointment *models.Ap
 
 	var count int64
 	if err := tx.Model(&models.Appointment{}).
-		Where("doctor_id = ? AND cancelled_at IS NULL AND start_at < ? AND end_at > ?", appointment.DoctorID, appointment.EndAt, appointment.StartAt).
+		Where("doctor_id = ? AND start_at < ? AND end_at > ?", appointment.DoctorID, appointment.EndAt, appointment.StartAt).
 		Count(&count).Error; err != nil {
 		r.logger.Error("ошибка при проверке конфликтов по времени для нового appointment", "ошибка", err)
 		return err
@@ -111,7 +111,7 @@ func (r *gormAppointmentRepository) CreateTx(tx *gorm.DB, appointment *models.Ap
 	}
 
 	if err := tx.Model(&models.Appointment{}).
-		Where("patient_id = ? AND cancelled_at IS NULL AND start_at < ? AND end_at > ?", appointment.PatientID, appointment.EndAt, appointment.StartAt).
+		Where("patient_id = ? AND start_at < ? AND end_at > ?", appointment.PatientID, appointment.EndAt, appointment.StartAt).
 		Count(&count).Error; err != nil {
 		r.logger.Error("ошибка при проверке конфликтов по времени для нового appointment пациента", "ошибка", err)
 		return err
@@ -150,7 +150,7 @@ func (r *gormAppointmentRepository) UpdateTx(tx *gorm.DB, appointment *models.Ap
 
 	var count int64
 	if err := tx.Model(&models.Appointment{}).
-		Where("doctor_id = ? AND id <> ? AND cancelled_at IS NULL AND start_at < ? AND end_at > ?", appointment.DoctorID, appointment.ID, appointment.EndAt, appointment.StartAt).
+		Where("doctor_id = ? AND id <> ?AND start_at < ? AND end_at > ?", appointment.DoctorID, appointment.ID, appointment.EndAt, appointment.StartAt).
 		Count(&count).Error; err != nil {
 		r.logger.Error("ошибка при проверке конфликтов по времени для обновленного appointment", "ошибка", err)
 		return err
@@ -161,7 +161,7 @@ func (r *gormAppointmentRepository) UpdateTx(tx *gorm.DB, appointment *models.Ap
 	}
 
 	if err := tx.Model(&models.Appointment{}).
-		Where("patient_id = ? AND id <> ? AND cancelled_at IS NULL AND start_at < ? AND end_at > ?", appointment.PatientID, appointment.ID, appointment.EndAt, appointment.StartAt).
+		Where("patient_id = ? AND id <> ? AND start_at < ? AND end_at > ?", appointment.PatientID, appointment.ID, appointment.EndAt, appointment.StartAt).
 		Count(&count).Error; err != nil {
 		r.logger.Error("ошибка при проверке конфликтов по времени для обновленного appointment", "ошибка", err)
 		return err

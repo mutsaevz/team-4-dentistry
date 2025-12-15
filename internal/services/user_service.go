@@ -250,7 +250,7 @@ func (s *userService) ApplyUserUpdate(
 		trimmed := strings.TrimSpace(*req.FirstName)
 
 		if trimmed == "" {
-			return errors.New("Имя не должно быть пустым")
+			return errors.New("имя не должно быть пустым")
 		}
 
 		user.FirstName = trimmed
@@ -296,7 +296,7 @@ func (s *userService) ApplyUserUpdate(
 	if req.Role != nil {
 		trimmed := strings.TrimSpace(string(*req.Role))
 		if trimmed == "" {
-			return errors.New("Role не должен быть пустым")
+			return errors.New("role не должен быть пустым")
 		}
 		switch trimmed {
 		case "admin", "doctor", "patient":

@@ -26,12 +26,12 @@ func NewPatientRecordService(repo repository.PatientRecordRepo, logger *slog.Log
 }
 
 func (s *patientRecord) Create(req *models.PatientRecordCreate) (*models.PatientRecord, error) {
-	s.logger.Debug("Create PatientRecord вызван", "patient_id", req.PatientID)
-
 	if req == nil {
 		s.logger.Warn("передан nil PatientRecordCreate")
 		return nil, constants.PatientRecord_IS_nil
 	}
+
+	s.logger.Debug("Create PatientRecord вызван", "patient_id", req.PatientID)
 
 	if req.PatientID == 0 {
 		s.logger.Warn("некорректный PatientID при создании patient record")
