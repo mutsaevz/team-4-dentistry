@@ -39,7 +39,7 @@ func (h *AppointmentsHandler) Create(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.logger.Warn("Ошибка парсинга JSON в Appointments.Create", "error", err.Error())
 		c.JSON(400, gin.H{
-			"error": constants.Invalid_JSON_Error,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -61,7 +61,7 @@ func (h *AppointmentsHandler) GetAll(c *gin.Context) {
 	if err != nil {
 		h.logger.Error("Ошибка получения всех записей (appointments)", "error", err.Error())
 		c.JSON(400, gin.H{
-			"error": constants.ErrGetAppointments,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -76,7 +76,7 @@ func (h *AppointmentsHandler) GetByID(c *gin.Context) {
 	if err != nil {
 		h.logger.Warn("Ошибка парсинга ID в Appointments.GetByID", "param", idstr)
 		c.JSON(400, gin.H{
-			"error": constants.Parse_ID_Error,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -85,7 +85,7 @@ func (h *AppointmentsHandler) GetByID(c *gin.Context) {
 	if err != nil {
 		h.logger.Error("Запись не найдена по ID", "error", err.Error(), "id", id)
 		c.JSON(404, gin.H{
-			"error": constants.ErrGetByIDAppointments,
+			"error":err.Error(),
 		})
 		return
 	}
@@ -100,7 +100,7 @@ func (h *AppointmentsHandler) Update(c *gin.Context) {
 	if err != nil {
 		h.logger.Warn("Ошибка парсинга ID в Appointments.Update", "param", idstr)
 		c.JSON(400, gin.H{
-			"error": constants.Parse_ID_Error,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -108,7 +108,7 @@ func (h *AppointmentsHandler) Update(c *gin.Context) {
 	var req models.AppointmentUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{
-			"error": constants.Invalid_JSON_Error,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -116,7 +116,7 @@ func (h *AppointmentsHandler) Update(c *gin.Context) {
 	if err := h.service.Update(uint(id), &req); err != nil {
 		h.logger.Error("Ошибка обновления записи (appointment)", "error", err.Error(), "appointment_id", id)
 		c.JSON(400, gin.H{
-			"error": constants.ErrUpdateAppointments,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -130,14 +130,14 @@ func (h *AppointmentsHandler) Delete(c *gin.Context) {
 	if err != nil {
 		h.logger.Warn("Ошибка парсинга ID в Appointments.Delete", "param", idstr)
 		c.JSON(400, gin.H{
-			"error": constants.Parse_ID_Error,
+			"error": err.Error(),
 		})
 		return
 	}
 	if err := h.service.Delete(uint(id)); err != nil {
 		h.logger.Error("Ошибка удаления записи (appointment)", "error", err.Error(), "appointment_id", id)
 		c.JSON(400, gin.H{
-			"error": constants.ErrDeleteAppointments,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -152,7 +152,7 @@ func (h *AppointmentsHandler) GetByPatientID(c *gin.Context) {
 	if err != nil {
 		h.logger.Warn("Ошибка парсинга ID в Appointments.GetByPatientID", "param", idstr)
 		c.JSON(400, gin.H{
-			"error": constants.Parse_ID_Error,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -161,7 +161,7 @@ func (h *AppointmentsHandler) GetByPatientID(c *gin.Context) {
 	if err != nil {
 		h.logger.Error("Ошибка получения записей по patient_id", "error", err.Error(), "patient_id", id)
 		c.JSON(404, gin.H{
-			"error": constants.PatientIDIsIncorrect,
+			"error": err.Error(),
 		})
 		return
 	}
