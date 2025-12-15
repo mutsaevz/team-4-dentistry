@@ -25,7 +25,7 @@ type ScheduleRepository interface {
 
 	DeleteByDoctorID(context.Context, uint) error
 
-	GetAvailableSlots(context.Context, uint, time.Time, time.Time) ([]models.Schedule, error)
+	GetAvailableSlots(context.Context, uint, time.Time) ([]models.Schedule, error)
 }
 
 type gormScheduleRepository struct {
@@ -147,11 +147,11 @@ func (r *gormScheduleRepository) DeleteByDoctorID(ctx context.Context, doctorID 
 func (r *gormScheduleRepository) GetAvailableSlots(
 	ctx context.Context,
 	doctorID uint,
-	start, end time.Time,
+	start time.Time,
 ) ([]models.Schedule, error) {
 
 	start = start.Truncate(24 * time.Hour)
-	end = start.AddDate(0, 0, 7)
+	end := start.AddDate(0, 0, 7)
 
 	var schedules []models.Schedule
 

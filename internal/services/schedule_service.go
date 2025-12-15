@@ -190,7 +190,7 @@ func (s *scheduleService) ValidateScheduleUpdate(existing *models.Schedule, req 
 func (s *scheduleService) GetAvailableSlots(ctx context.Context, doctorID uint, week int) ([]models.Schedule, error) {
 	start := time.Now().AddDate(0, 0, 7*week)
 	s.logger.Debug("GetAvailableSlots вызван", "doctor_id", doctorID, "week", week, "start", start)
-	slots, err := s.schedule.GetAvailableSlots(ctx, doctorID, start, time.Time{})
+	slots, err := s.schedule.GetAvailableSlots(ctx, doctorID, start)
 	if err != nil {
 		s.logger.Error("ошибка при получении доступных слотов", "error", err, "doctor_id", doctorID)
 		return nil, err

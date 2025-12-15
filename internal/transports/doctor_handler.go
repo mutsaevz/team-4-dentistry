@@ -149,7 +149,7 @@ func (h *DoctorHandler) DeleteDoctor(c *gin.Context) {
 		return
 	}
 	h.logger.Info("Врач удалён", "doctor_id", id)
-	c.Status(http.StatusNoContent)
+	c.Status(http.StatusOK)
 }
 
 func (h *DoctorHandler) GetDoctorReviews(c *gin.Context) {

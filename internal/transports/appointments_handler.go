@@ -47,7 +47,7 @@ func (h *AppointmentsHandler) Create(c *gin.Context) {
 	if err != nil {
 		h.logger.Error("Ошибка создания записи (appointment)", "error", err.Error(), "patient_id", req.PatientID)
 		c.JSON(400, gin.H{
-			"error": constants.ErrCreateAppointment,
+			"error": err.Error(),
 		})
 		return
 	}

@@ -68,12 +68,12 @@ func (r *gormPatientRecordRepo) Get() ([]models.PatientRecord, error) {
 }
 
 func (r *gormPatientRecordRepo) Update(patientRecord *models.PatientRecord) error {
-	r.logger.Info("Обновление patientRecord", "patientRecord_id", patientRecord.ID)
-
 	if patientRecord == nil {
 		r.logger.Warn("patientRecord равен nil")
 		return constants.PatientRecord_IS_nil
 	}
+
+	r.logger.Info("Обновление patientRecord", "patientRecord_id", patientRecord.ID)
 
 	if err := r.DB.Save(patientRecord).Error; err != nil {
 		r.logger.Error("ошибка при обновлении patientRecord", "ошибка", err, "patientRecord_id", patientRecord.ID)
